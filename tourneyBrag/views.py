@@ -163,3 +163,59 @@ class TournamentsSpecificList(mixins.ListModelMixin,
 					num = random.randint(0, 2147483647)
 		request.data['playerID'] = num
 		return self.create(request, *args, **kwargs)
+
+
+class Register(request):
+    # Query for existing username and email, insert into database, reply with affirm
+    return None
+
+class Login(request):
+    # Query for username + pass, compare hashed pass with onsite pass, reply
+    # with affirm
+    return None
+
+class CreateTournament(request):
+    # Query for existing tourney name, insert into database, reply with affirm
+    return None
+
+class ModifyTournament(request):
+    # Update tourney values in database, reply with affirm
+    return None
+
+class Comment(request):
+    # Insert comment values into database, reply with affirm
+    return None
+
+class Application(request):
+    # Modify tourney, player, organizer for type of application management,
+    # reply with affirm
+    return None
+
+class Ban(request):
+    # Modify profile of given username with appropriate values, reply with
+    # affirm
+    return None
+
+class BecomeFan(request):
+    # Modify profiles of given usernames with appropriate values, reply with
+    # affirm
+    return None
+
+class BecomeVoucher(request):
+    # Modify profiles of given usernames with appropriate values, reply with
+    # affirm
+    return None
+
+class ModifyProfile(request):
+    # Update profile values in database, reply with affirm
+    return None
+
+class Logout(request):
+    # required?
+    return None
+
+class TournamentPage(request):
+    # Query for everything on tourney page of given name, reply with JSON
+    # string
+
+
