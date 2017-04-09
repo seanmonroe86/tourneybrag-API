@@ -1,4 +1,6 @@
 output.txt
 update
 *~
-**__pycache__/**
+mysite/__pycache__/*
+tourneyBrag/__pycache__/*
+
