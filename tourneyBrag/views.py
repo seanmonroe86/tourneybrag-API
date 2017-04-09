@@ -1,7 +1,7 @@
 from django.core import serializers
 from django.http import HttpResponse
 from django.http import JsonResponse
-from django.db.models.expressions import  RawSQL
+from django.db.models.expressions import RawSQL
 from tourneyBrag.models import *
 from rest_framework import generics, status, mixins
 from rest_framework.response import Response
@@ -15,28 +15,16 @@ def index(request):
 class TournamentPage(APIView):
     # Query for everything on tourney page of given name, reply with JSON
     # string
+    from tourneyBrag.models import Tournament
     def get(self, request, *args, **kwargs):
-        tournament = {
-                'name': 'BlizzardBrawl2017',
-                'organizer': 'AlexThyMan',
-                'date': '2017-05-26',
-                'participants': [
-                    {'name': 'AlexThyMan'},
-                    {'name': 'ItsaMauricle'},
-                    {'name': 'SlyGuySean'},
-                    {'name': 'DanePrettyCoolMan'},
-                    ],
-                'comments': [
-                    {'author': 'DanePrettyCoolMan', 'content': 'So Excited for this one!'},
-                    {'author': 'SlyGuySean', 'content': 'Gonna wreck everyone.'},
-                    {'author': 'ItsaMauricle', 'content': 'Ready to win this thing.'},
-                    ],
+        tourneyID = request.META['QUERY_STRING']
+        t = Tournament.objects.get(tournamentTitle = tourneyID)
+        tourney = {
+                'name': t.tournamentTitle,
+                'organizer': t.organizerOwner,
+                'date': t.date_start,
                 }
-
-        
-        #return Response(request.META['QUERY_STRING'])
-
-        return JsonResponse(tournament)
+        return JsonResponse(tourney)
 
 class PlayerDetails(mixins.RetrieveModelMixin,
                                         mixins.UpdateModelMixin,
