@@ -44,7 +44,7 @@ class Tournament(models.Model):
         organizerOwnerID = models.ForeignKey('Organizer', on_delete=models.DO_NOTHING, related_name= '+')
         tournamentTitle = models.CharField(max_length=30, unique= True, primary_key=True)
         date_created = models.DateTimeField('date_created')
-        date_start = models.DateTimeField('start date')
+        date_start = models.DateTimeField('date_start')
 
         #def __str__(self):
         #       return self.organizerOwner + ", " + str(self.organizerOwnerID) + ", " + self.tournamentTitle + ", " + self.date_created + ", " + self.date_start
