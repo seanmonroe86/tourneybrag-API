@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class TourneybragConfig(AppConfig):
+class tourneyBragConfig(AppConfig):
     name = 'tourneyBrag'

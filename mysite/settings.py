@@ -25,13 +25,13 @@ SECRET_KEY = '3bk)$1xc^de#8-e7ks!w+ul1^sm08=7jfzlxx38!38))hnxudu'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'tourneyBrag.apps.TourneybragConfig',
+    'tourneyBrag.apps.tourneyBragConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -78,11 +78,11 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'TourneyBrag v4',
-	    'USER': 'postgres',
-	    'PASSWORD': 'postgres',
+        'NAME': 'tourneybrag',
+	    'USER': 'tourneybrag',
+	    'PASSWORD': 'tourneybrag',
 	    'HOST': '127.0.0.1',
-	    'PORT': '5432',
+	    'PORT': '35000',
     }
 }
 
@@ -111,7 +111,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'EST'
 
 USE_I18N = True
 
