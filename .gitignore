@@ -1,3 +1,4 @@
 output.txt
 update
 *~
+**__pycache__/**
