@@ -3,4 +3,4 @@ update
 *~
 mysite/__pycache__/*
 tourneyBrag/__pycache__/*
-
+tourneyBrag/migrations/**
