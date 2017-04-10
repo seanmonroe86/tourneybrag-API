@@ -32,24 +32,29 @@ class TournamentPage(APIView):
                 }
         return JsonResponse(tourney)
 
-class PlayerDetails(mixins.RetrieveModelMixin,
-                                        mixins.UpdateModelMixin,
-                                        mixins.DestroyModelMixin,
-                                        generics.GenericAPIView):
-        queryset = Player.objects.all()
-        serializer_class = PlayerSerializer
+class PlayerPage(APIView):
+    def get(self, request, *args, **kwargs):
+        playerID = request.META['QUERY_STRING']
+        p = Player.objects.get(playerName = playerID)
+        c = Comment.objects.filter(receiver_name = playerID).values('author_name', 'actual_comment')
+        f = Fan.objects.filter(user_Idol = playerID).values('user_Fan')
+        e = Entrant.objects.filter(
+                player_entrant = playerID,
+                has_been_accepted = True
+                ).values('tournament_entered')
+        player = {
+                'username': p.playerName,
+                #'accountType': p.acctType,
+                'gamePlays': [{'gameName': p.gamePlayed}],
+                #'location': p.loc,
+                #'wins': p.playerWins,
+                #'losses': p.playerLosses,
+                'tourneysPlayed': [entry for entry in e],
+                'fans': [entry for entry in f],
+                'comments': [entry for entry in c],
+                }
+        return JsonResponse(player)
 
-
-        def get(self, request, *args, **kwargs):
-                return self.retrieve(request, *args, **kwargs)
-
-
-        def put(self, request, *args, **kwargs):
-                return self.update(request, *args, **kwargs)
-
-
-        #def delete(self, request, *args, **kwargs):
-        #       return self.destroy(request, *args, **kwargs)
 
 #Lists all players
 class PlayerList(mixins.ListModelMixin,
