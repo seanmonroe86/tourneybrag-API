@@ -12,10 +12,53 @@ from tourneyBrag.serializers import *
 def index(request):
         return HttpResponse("Hello world and all those who inhabit it!")
 
+
+class PlayerPage(APIView):
+    def get(self, request, *args, **kwargs):
+        playerID = request.META['QUERY_STRING']
+        p = Player.objects.get(playerName = playerID)
+        e = Entrant.objects.filter(
+                player_entrant = playerID,
+                has_been_accepted = True
+                ).values('tournament_entered')
+        f = Fan.objects.filter(user_Idol = playerID).values('user_Fan')
+        c = Comment.objects.filter(receiver_name = playerID).values('author_name', 'actual_comment')
+        player = {
+                'username': p.playerName,
+                #'accountType': p.acctType,
+                'gamePlays': [{'gameName': p.gamePlayed}],
+                #'location': p.loc,
+                #'wins': p.playerWins,
+                #'losses': p.playerLosses,
+                'tourneysPlayed': [entry for entry in e],
+                'fans': [entry for entry in f],
+                'comments': [entry for entry in c],
+                }
+        return JsonResponse(player)
+
+
+class OrganizerPage(APIView):
+    def get(self, request, *args, **kwargs):
+        organizerID = request.META['QUERY_STRING']
+        tourneyList = []
+        o = Organizer.objects.get(organizerName = organizerID)
+        v = Voucher.objects.filter(
+                user_receiver = organizerID
+                ).values('user_voucher')
+        t = Tournament.objects.filter(organizerOwner = organizerID)
+        c = Comment.objects.filter(receiver_name = organizerID).values('author_name', 'actual_comment')
+        for tourney in [entry for entry in t]:
+            tourneyList.append({'tournament_name': tourney.tournamentTitle})
+        organizer = {
+                'username': o.organizerName,
+                'vouchers': [entry for entry in v],
+                'tournaments': tourneyList,
+                'comments': [entry for entry in c],
+                }
+        return JsonResponse(organizer)
+
+
 class TournamentPage(APIView):
-    # Query for everything on tourney page of given name, reply with JSON
-    # string
-    from tourneyBrag.models import Tournament
     def get(self, request, *args, **kwargs):
         tourneyID = request.META['QUERY_STRING']
         t = Tournament.objects.get(tournamentTitle = tourneyID)
@@ -31,29 +74,6 @@ class TournamentPage(APIView):
                 'comments': [entry for entry in c],
                 }
         return JsonResponse(tourney)
-
-class PlayerPage(APIView):
-    def get(self, request, *args, **kwargs):
-        playerID = request.META['QUERY_STRING']
-        p = Player.objects.get(playerName = playerID)
-        c = Comment.objects.filter(receiver_name = playerID).values('author_name', 'actual_comment')
-        f = Fan.objects.filter(user_Idol = playerID).values('user_Fan')
-        e = Entrant.objects.filter(
-                player_entrant = playerID,
-                has_been_accepted = True
-                ).values('tournament_entered')
-        player = {
-                'username': p.playerName,
-                #'accountType': p.acctType,
-                'gamePlays': [{'gameName': p.gamePlayed}],
-                #'location': p.loc,
-                #'wins': p.playerWins,
-                #'losses': p.playerLosses,
-                'tourneysPlayed': [entry for entry in e],
-                'fans': [entry for entry in f],
-                'comments': [entry for entry in c],
-                }
-        return JsonResponse(player)
 
 
 #Lists all players
@@ -91,50 +111,6 @@ class PlayerList(mixins.ListModelMixin,
                 #newPlayer.save()
                 #return Response("New player has been added!")
 
-
-class OrganizerDetails(APIView):
-        def get(self, request, *args, **kwargs):
-                organizer = Organizer.objects.filter(organizerID = self.kwargs['pk'])#val=RawSQL("SELECT tournamentTitle FROM tourneyBrag_Tournament WHERE organizerOwnerID = %s", (self.kwargs['pk'])))
-
-                allTournamentsForOrganizer = Tournament.objects.filter(organizerOwnerID = organizer[0].organizerID)
-
-                organizersTourneys = []
-
-                for tourneys in allTournamentsForOrganizer:
-                        organizersTourneys.append(tourneys.tournamentTitle)
-
-                Comments = Comment.objects.filter(receiver_name = organizer[0].organizerName).values('author_name', 'actual_comment')
-
-                organizersComments = []
-                for coms in Comments:
-                        organizersComments.append(coms)
-
-                organizerDictionary = {'organizerName': organizer[0].organizerName,
-                                                           'organizerID': organizer[0].organizerID,
-                                                           'tournamentList': organizersTourneys,
-                                                           'authors_and_comments': organizersComments}
-
-
-                fullOrganizer = organizer#.annotate(val=RawSQL("SELECT actual_comment FROM tourneyBrag_Comments WHERE receiver_name = %s", (self.kwargs['pk'])))
-                json_data = json.dumps(allTournamentsForOrganizer)#serializers.serialize('json', fullOrganizer, many=True)
-                return Response(json_data.data)
-
-
-
-        #queryset = Organizer.objects.all()
-        #serializer_class = OrganizerSerializer
-
-
-        #def get(self, request, *args, **kwargs):
-        #       return self.retrieve(request, *args, **kwargs)
-
-
-        #def put(self, request, *args, **kwargs):
-        #       return self.update(request, *args, **kwargs)
-
-
-        #def delete(self, request, *args, **kwargs):
-        #       return self.destroy(request, *args, **kwargs)
 
 #Lists all organizerss
 class OrganizerList(mixins.ListModelMixin,
