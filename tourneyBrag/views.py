@@ -1,16 +1,10 @@
-from django.core import serializers
-from django.http import HttpResponse
-from django.http import JsonResponse
-from django.db.models.expressions import RawSQL
-from tourneyBrag.models import *
-from rest_framework import generics, status, mixins
+from django.http import HttpResponse, JsonResponse
+from rest_framework import generics, mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import uuid, json, random
+from tourneyBrag.models import *
 from tourneyBrag.serializers import *
-
-def index(request):
-        return HttpResponse("Hello world and all those who inhabit it!")
+import json, random
 
 
 class PlayerPage(APIView):
@@ -27,6 +21,7 @@ class PlayerPage(APIView):
                 'username': p.playerName,
                 #'accountType': p.acctType,
                 'gamePlays': [{'gameName': p.gamePlayed}],
+                #'mainchar': p.mainCharacter,
                 #'location': p.loc,
                 #'wins': p.playerWins,
                 #'losses': p.playerLosses,
@@ -35,6 +30,22 @@ class PlayerPage(APIView):
                 'comments': [entry for entry in c],
                 }
         return JsonResponse(player)
+
+    def post(self, request, *args, **kwargs):
+        p = json.loads(request.body)
+        p = Player(
+                playerName = p['username'],
+                password = p['password'],
+                gamePlayed = p['gamePlays'],
+                mainCharacter = p['mainchar'],
+                )
+#        if not p.exists():
+#            p.save()
+#            return HttpResponse()
+#        else: 
+#            return HttpResponse(status = 409, reason = "Entry exists.")
+        p.save()
+        return HttpResponse()
 
 
 class OrganizerPage(APIView):
@@ -92,24 +103,6 @@ class PlayerList(mixins.ListModelMixin,
                                         num = random.randint(0, 2147483647)
                 request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
-
-#       def get(self, request):
-                #players = Player.objects.all()
-                #serializer = PlayerSerializer(players, many=True)
-                #return Response(serializer.data)
-
-        #def post(self, request):
-#               num = random.randint(0, 2147483647)
-                #while Player.objects.filter(Player__playerID=num):
-#                       num = random.randint(0, 2147483647)
-                #serializer = PlayerSerializer(data=request.data)
-                #serializer.data['playerID'] = num
-                #if serializer.is_valid():
-#                       serializer.save()
-                        #return Response(serializer.data, status=status.HTTP_201_CREATED)
-                #newPlayer = Player(num, request.Post['playerName'], request.Post['password'], request.Post['gamePlayed'], request.Post['mainCharacter'])
-                #newPlayer.save()
-                #return Response("New player has been added!")
 
 
 #Lists all organizerss

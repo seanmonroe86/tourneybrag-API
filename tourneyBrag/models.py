@@ -4,15 +4,23 @@ import uuid
 #If you make changes, make sure to do makemigrations and then migrate.
 #If you add another table, add it to the admin.py so admins can see the table
 
+#class Player(models.Model):
+#        playerName = models.CharField(max_length=30, unique=True)
+#        password = models.CharField(max_length=30)
+#        gamePlayed = models.CharField(max_length=50)
+#        mainCharacter = models.CharField(max_length=30)
+#        playerID = models.CharField(max_length=15, primary_key=True)
+#
+#        def __str__(self):
+#                return str(self.playerID) + ", " + self.playerName + ", " + self.password + ", " + self.gamePlayed + ", " + self.mainCharacter
 class Player(models.Model):
-        playerName = models.CharField(max_length=30, unique=True)
+        playerName = models.CharField(max_length=30, primary_key=True)
         password = models.CharField(max_length=30)
         gamePlayed = models.CharField(max_length=50)
         mainCharacter = models.CharField(max_length=30)
-        playerID = models.CharField(max_length=15, primary_key=True)
 
         def __str__(self):
-                return str(self.playerID) + ", " + self.playerName + ", " + self.password + ", " + self.gamePlayed + ", " + self.mainCharacter
+                return "{}, {}, {}, {}".format(self.playerName, self.password, self.gamePlayed, self.mainCharacter)
 
 
 class Organizer(models.Model):
