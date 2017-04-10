@@ -30,7 +30,7 @@ class OrganizerProfile(object):
                 self.organID = organID
                 self.organName - organName
                 self.pw = pw
-                self.tourneyTitle = touneyTitle
+                self.tourneyTitle = tourneyTitle
                 self.actualComment = actualComment
                 self.commentAuthor = commentAuthor
 
@@ -66,7 +66,7 @@ class Entrant(models.Model):
         tournament_entered = models.ForeignKey('Tournament', on_delete=models.DO_NOTHING,related_name= '+')
         has_been_accepted = models.BooleanField()
 
-class Record(models.Model):
+class Record(models.Model):  #This may be deleted since match does the same thing and is better
         tournament_name = models.ForeignKey('Tournament',on_delete=models.CASCADE,related_name= '+')
         player_winner = models.CharField(max_length=30)
         player_loser = models.CharField(max_length=30)

@@ -26,12 +26,8 @@ class TournamentPage(APIView):
                 }
         return JsonResponse(tourney)
 
-class PlayerDetails(mixins.RetrieveModelMixin,
-                                        mixins.UpdateModelMixin,
-                                        mixins.DestroyModelMixin,
-                                        generics.GenericAPIView):
-        queryset = Player.objects.all()
-        serializer_class = PlayerSerializer
+class PlayerDetails(APIView):#mixins.RetrieveModelMixin,mixins.UpdateModelMixin,mixins.DestroyModelMixin,generics.GenericAPIView):
+
 
 
         def get(self, request, *args, **kwargs):
@@ -98,15 +94,18 @@ class OrganizerDetails(APIView):
                 for coms in Comments:
                         organizersComments.append(coms)
 
+                organizerVouchers = Voucher.objects.filter(user_receiver = organizer[0].organizerName).values('user_voucher')
+
                 organizerDictionary = {'organizerName': organizer[0].organizerName,
-                                                           'organizerID': organizer[0].organizerID,
-                                                           'tournamentList': organizersTourneys,
-                                                           'authors_and_comments': organizersComments}
+                                        'organizerID': organizer[0].organizerID,
+                                        'tournamentList': organizersTourneys,
+                                        'authors_and_comments': organizersComments,
+                                        'vouchers_list': [vouch for vouch in organizerVouchers]}
 
 
-                fullOrganizer = organizer#.annotate(val=RawSQL("SELECT actual_comment FROM tourneyBrag_Comments WHERE receiver_name = %s", (self.kwargs['pk'])))
-                json_data = json.dumps(allTournamentsForOrganizer)#serializers.serialize('json', fullOrganizer, many=True)
-                return Response(json_data.data)
+                #fullOrganizer = organizer#.annotate(val=RawSQL("SELECT actual_comment FROM tourneyBrag_Comments WHERE receiver_name = %s", (self.kwargs['pk'])))
+                #json_data = json.dumps(allTournamentsForOrganizer)#serializers.serialize('json', fullOrganizer, many=True)
+                return JsonResponse(organizerDictionary)
 
 
 
@@ -177,6 +176,32 @@ class TournamentsSpecificList(mixins.ListModelMixin,
                 request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
 
+class FanList(APIView):
+    def get(self, request, *args, **kwargs):
+        fanList = Fan.objects.filter(idolID = self.kwargs['pk'])
+        return JsonResponse(fanList, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        newFan = request.data['user_Fan']
+        theIdol = request.data['user_Idol']
+        idolsID = request.data['idolID']
+        newFanObj = Fan(newFan,theIdol,idolsID)
+        newFanObj.save()
+        return Response(status=status.HTTP_201_CREATED)
+
+class VoucherList(APIView):
+    def get(self, request, *args, **kwargs):
+        voucherList = Voucher.objects.filter(user_receiver= request.META['QUERY_STRING']).values('user_voucher')#request.META['QUERY_STRING'])
+        vouchDict = {'voucherName':[voucher.user_voucher for voucher in voucherList]}
+        return JsonResponse(voucherList, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        newVoucher = request.data['user_voucher']
+        theReceiver = request.data['user_receiver']
+        receiversID = request.data['receiverID']
+        newVoucherObj = Voucher(newVoucher, theReceiver, receiversID)
+        newVoucherObj.save()
+        return Response(status=status.HTTP_201_CREATED)
 
 #def Register(request):
 #    # Query for existing username and email, insert into database, reply with affirm

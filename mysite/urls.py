@@ -16,7 +16,7 @@ urlpatterns = [
     #url(r'^application/', views.Application.as_view()),
     #url(r'^ban/', views.Ban.as_view()),
     #url(r'^become-fan/', views.becomeFan.as_view()),
-    #url(r'^become-voucher/', views.BecomeVoucher.as_view()),
+    url(r'^become-voucher/', views.VoucherList.as_view()),
     #url(r'^modify-profile/', views.ModifyProfile.as_view()),
     #url(r'^logout/', views.Logout.as_view()),
     url(r'^playerprofile/(?P<pk>[0-9]+)/$', views.PlayerDetails.as_view()),
