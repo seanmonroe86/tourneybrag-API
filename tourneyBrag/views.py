@@ -19,10 +19,16 @@ class TournamentPage(APIView):
     def get(self, request, *args, **kwargs):
         tourneyID = request.META['QUERY_STRING']
         t = Tournament.objects.get(tournamentTitle = tourneyID)
+        c = Comment.objects.filter(receiver_name = tourneyID).values('author_name', 'actual_comment')
+        e = Entrant.objects.filter(
+                tournament_entered = t,
+                has_been_accepted = True).values('player_entrant')
         tourney = {
                 'name': t.tournamentTitle,
                 'organizer': t.organizerOwner,
                 'date': t.date_start,
+                'participants': [entry for entry in e],
+                'comments': [entry for entry in c],
                 }
         return JsonResponse(tourney)
 
