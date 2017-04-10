@@ -15,7 +15,7 @@ class Player(models.Model):
 
 
 class Organizer(models.Model):
-    organizerID = models.CharField(primary_key=True, max_length=30)
+    organizerID = models.CharField(primary_key=True, max_length=30) # why do we have this
     organizerName = models.CharField(max_length=30)
     password = models.CharField(max_length=30)
 
@@ -41,9 +41,9 @@ class Administrator(models.Model):
 
 class Tournament(models.Model):
     organizerOwner = models.CharField(max_length=30)
-    organizerOwnerID = models.ForeignKey('Organizer', on_delete=models.DO_NOTHING, related_name= '+')
+    #organizerOwnerID = models.ForeignKey('Organizer', on_delete=models.DO_NOTHING, related_name= '+')
     tournamentTitle = models.CharField(max_length=30, unique= True, primary_key=True)
-    date_created = models.DateTimeField('date_created')
+    date_created = models.DateTimeField('date_created', auto_now_add=True)
     date_start = models.DateTimeField('date_start')
 
     #def __str__(self):

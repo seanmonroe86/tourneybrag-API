@@ -33,18 +33,13 @@ class PlayerPage(APIView):
 
     def post(self, request, *args, **kwargs):
         p = json.loads(request.body)
-        p = Player(
+        player = Player(
                 playerName = p['username'],
                 password = p['password'],
                 gamePlayed = p['gamePlays'],
                 mainCharacter = p['mainchar'],
                 )
-#        if not p.exists():
-#            p.save()
-#            return HttpResponse()
-#        else: 
-#            return HttpResponse(status = 409, reason = "Entry exists.")
-        p.save()
+        player.save()
         return HttpResponse()
 
 
@@ -61,12 +56,23 @@ class OrganizerPage(APIView):
         for tourney in [entry for entry in t]:
             tourneyList.append({'tournament_name': tourney.tournamentTitle})
         organizer = {
+                'id': o.organizerID,
                 'username': o.organizerName,
                 'vouchers': [entry for entry in v],
                 'tournaments': tourneyList,
                 'comments': [entry for entry in c],
                 }
         return JsonResponse(organizer)
+
+    def post(self, request, *args, **kwargs):
+        o = json.loads(request.body)
+        organizer = Organizer(
+                organizerID = o['id'],
+                organizerName = o['username'],
+                password = o['password'],
+                )
+        organizer.save()
+        return HttpResponse()
 
 
 class TournamentPage(APIView):
@@ -85,6 +91,16 @@ class TournamentPage(APIView):
                 'comments': [entry for entry in c],
                 }
         return JsonResponse(tourney)
+
+    def post(self, request, *args, **kwargs):
+        t = json.loads(request.body)
+        tourney = Tournament(
+                organizerOwner = t['organizer'],
+                tournamentTitle = t['name'],
+                date_start = t['date']
+                )
+        tourney.save()
+        return HttpResponse()
 
 
 #Lists all players
