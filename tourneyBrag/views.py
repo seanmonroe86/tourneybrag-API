@@ -1,22 +1,64 @@
-from django.core import serializers
-from django.http import HttpResponse
-from django.http import JsonResponse
-from django.db.models.expressions import RawSQL
-from tourneyBrag.models import *
-from rest_framework import generics, status, mixins
+from django.http import HttpResponse, JsonResponse
+from rest_framework import generics, mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import uuid, json, random
+from tourneyBrag.models import *
 from tourneyBrag.serializers import *
+import json
 
-def index(request):
-        return HttpResponse("Hello world and all those who inhabit it!")
+
+class Login(APIView):
+    def post(self, request, *args, **kwargs):
+        user = json.loads(request.body)
+        userID = user['username']
+        userPass = user['password']
+        objs = [Player, Organizer, Administrator]
+        for Type in objs:
+            try:
+                u = Type.objects.get(username = userID)
+                if u.password == userPass:
+                    try:
+                        b = Banned.objects.get(user = userID)
+                        ban = {'date': b.date,'reason': b.reason}
+                    except Banned.DoesNotExist:
+                        ban = {'date': 0000-00-00,'reason': ''}
+                    return JsonResponse(ban)
+                else:
+                    r = {'date': 9999-99-99,'reason': 'Invalid password'}
+                    return JsonResponse(r)
+            except Type.DoesNotExist:
+                pass
+        r = {'date': 1234-56-78,'reason': 'User not found'}
+        return JsonResponse(r)
+
+class Register(APIView):
+    def post(self, request, *args, **kwargs):
+        user = json.loads(request.body)
+        userID = user['username']
+        userType = user['type']
+
+        objs = [Player, Organizer, Administrator]
+        for Type in objs:
+            try:
+                u = Type.objects.get(username = userID)
+                return HttpResponse("Username {} taken".format(userID), status = 409)
+            except Type.DoesNotExist:
+                pass
+        if userType == 'player':
+            return PlayerPage.post(self, request, args, kwargs)
+        elif userType == 'organizer':
+            return OrganizerPage.post(self, request, args, kwargs)
+        else: return HttpResponse(
+        "Invalid user type \"{}\" (bad frontend!)".format(userType), status = 405)
 
 
 class PlayerPage(APIView):
     def get(self, request, *args, **kwargs):
         playerID = request.META['QUERY_STRING']
-        p = Player.objects.get(playerName = playerID)
+        try:
+            p = Player.objects.get(username = playerID)
+        except Player.DoesNotExist:
+            return HttpResponse("Player {} not found.".format(playerID), status = 404)
         e = Entrant.objects.filter(
                 player_entrant = playerID,
                 has_been_accepted = True
@@ -24,24 +66,36 @@ class PlayerPage(APIView):
         f = Fan.objects.filter(user_Idol = playerID).values('user_Fan')
         c = Comment.objects.filter(receiver_name = playerID).values('author_name', 'actual_comment')
         player = {
-                'username': p.playerName,
-                #'accountType': p.acctType,
+                'username': p.username,
+                'accountType': p.accountType,
                 'gamePlays': [{'gameName': p.gamePlayed}],
-                #'location': p.loc,
-                #'wins': p.playerWins,
-                #'losses': p.playerLosses,
+                'mainchar': p.mainCharacter,
+                'location': p.loc,
+                'wins': p.playerWins,
+                'losses': (p.playerGames - p.playerWins),
                 'tourneysPlayed': [entry for entry in e],
                 'fans': [entry for entry in f],
                 'comments': [entry for entry in c],
                 }
         return JsonResponse(player)
 
+    def post(self, request, *args, **kwargs):
+        p = json.loads(request.body)
+        player = Player(
+                username = p['username'],
+                password = p['password'],
+                gamePlayed = p['gamePlays'],
+                mainCharacter = p['mainchar'],
+                )
+        player.save()
+        return HttpResponse("Player created", status = 201)
+
 
 class OrganizerPage(APIView):
     def get(self, request, *args, **kwargs):
         organizerID = request.META['QUERY_STRING']
         tourneyList = []
-        o = Organizer.objects.get(organizerName = organizerID)
+        o = Organizer.objects.get(username = organizerID)
         v = Voucher.objects.filter(
                 user_receiver = organizerID
                 ).values('user_voucher')
@@ -50,12 +104,21 @@ class OrganizerPage(APIView):
         for tourney in [entry for entry in t]:
             tourneyList.append({'tournament_name': tourney.tournamentTitle})
         organizer = {
-                'username': o.organizerName,
+                'username': o.username,
                 'vouchers': [entry for entry in v],
                 'tournaments': tourneyList,
                 'comments': [entry for entry in c],
                 }
         return JsonResponse(organizer)
+
+    def post(self, request, *args, **kwargs):
+        o = json.loads(request.body)
+        organizer = Organizer(
+                username = o['username'],
+                password = o['password'],
+                )
+        organizer.save()
+        return HttpResponse("Organizer created", status = 201)
 
 
 class TournamentPage(APIView):
@@ -75,6 +138,28 @@ class TournamentPage(APIView):
                 }
         return JsonResponse(tourney)
 
+    def post(self, request, *args, **kwargs):
+        t = json.loads(request.body)
+        tourney = Tournament(
+                organizerOwner = t['organizer'],
+                tournamentTitle = t['name'],
+                date_start = t['date']
+                )
+        tourney.save()
+        return HttpResponse("Tournament created", status = 201)
+
+
+class MakeComment(APIView):
+    def post(self, request, *args, **kwargs):
+        c = json.loads(request.body)
+        comment = Comment(
+                author_name = c['author'],
+                receiver_name = c['receiver'],
+                actual_comment = c['comment']
+                )
+        comment.save()
+        return HttpResponse("Comment posted", status = 201)
+
 
 #Lists all players
 class PlayerList(mixins.ListModelMixin,
@@ -87,29 +172,11 @@ class PlayerList(mixins.ListModelMixin,
                 return self.list(request, *args, **kwargs)
 
         def post(self, request, *args, **kwargs):
-                num = random.randint(0, 2147483647)
-                while Player.objects.filter(playerID=num):
-                                        num = random.randint(0, 2147483647)
-                request.data['playerID'] = num
+#                num = random.randint(0, 2147483647)
+#                while Player.objects.filter(playerID=num):
+#                                        num = random.randint(0, 2147483647)
+#                request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
-
-#       def get(self, request):
-                #players = Player.objects.all()
-                #serializer = PlayerSerializer(players, many=True)
-                #return Response(serializer.data)
-
-        #def post(self, request):
-#               num = random.randint(0, 2147483647)
-                #while Player.objects.filter(Player__playerID=num):
-#                       num = random.randint(0, 2147483647)
-                #serializer = PlayerSerializer(data=request.data)
-                #serializer.data['playerID'] = num
-                #if serializer.is_valid():
-#                       serializer.save()
-                        #return Response(serializer.data, status=status.HTTP_201_CREATED)
-                #newPlayer = Player(num, request.Post['playerName'], request.Post['password'], request.Post['gamePlayed'], request.Post['mainCharacter'])
-                #newPlayer.save()
-                #return Response("New player has been added!")
 
 
 #Lists all organizerss
@@ -123,10 +190,10 @@ class OrganizerList(mixins.ListModelMixin,
                 return self.list(request, *args, **kwargs)
 
         def post(self, request, *args, **kwargs):
-                num = random.randint(0, 2147483647)
-                while Player.objects.filter(playerID=num):
-                                        num = random.randint(0, 2147483647)
-                request.data['playerID'] = num
+#                num = random.randint(0, 2147483647)
+#                while Player.objects.filter(playerID=num):
+#                                        num = random.randint(0, 2147483647)
+#                request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
 
 
@@ -158,32 +225,19 @@ class TournamentsSpecificList(mixins.ListModelMixin,
                 return Response(allSet.data)
 
         def post(self, request, *args, **kwargs):
-                num = random.randint(0, 2147483647)
-                while Player.objects.filter(playerID=num):
-                                        num = random.randint(0, 2147483647)
-                request.data['playerID'] = num
+#                num = random.randint(0, 2147483647)
+#                while Player.objects.filter(playerID=num):
+#                                        num = random.randint(0, 2147483647)
+#                request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
 
 
-#def Register(request):
-#    # Query for existing username and email, insert into database, reply with affirm
-#    return None
-#
-#def Login(request):
-#    # Query for username + pass, compare hashed pass with onsite pass, reply
-#    # with affirm
-#    return None
-#
 #def CreateTournament(request):
 #    # Query for existing tourney name, insert into database, reply with affirm
 #    return None
 #
 #def ModifyTournament(request):
 #    # Update tourney values in database, reply with affirm
-#    return None
-#
-#def Comment(request):
-#    # Insert comment values into database, reply with affirm
 #    return None
 #
 #def Application(request):
