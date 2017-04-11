@@ -5,22 +5,25 @@ from django.db import models
 
 
 class Player(models.Model):
-    playerName = models.CharField(max_length=30, primary_key=True)
+    username = models.CharField(max_length=30, primary_key=True)
     password = models.CharField(max_length=30)
     gamePlayed = models.CharField(max_length=50)
     mainCharacter = models.CharField(max_length=30)
+    accountType = models.CharField(max_length=10, default="player")
+    loc = models.CharField(max_length=50)
+    playerWins = models.IntegerField(default=0)
+    playerGames = models.IntegerField(default=0)
 
     def __str__(self):
-        return "{}, {}, {}, {}".format(self.playerName, self.password, self.gamePlayed, self.mainCharacter)
+        return "{}, {}, {}, {}".format(self.username, self.password, self.gamePlayed, self.mainCharacter)
 
 
 class Organizer(models.Model):
-    organizerID = models.CharField(primary_key=True, max_length=30) # why do we have this
-    organizerName = models.CharField(max_length=30)
+    username = models.CharField(primary_key=True, max_length=30) # why do we have this
     password = models.CharField(max_length=30)
 
     def __str__(self):
-        return "{}, {}, {}".format(self.organizerID, self.organizerName, self.password)
+        return "{}, {}".format(self.username, self.password)
 
 
 class OrganizerProfile(object):
@@ -34,14 +37,12 @@ class OrganizerProfile(object):
 
 
 class Administrator(models.Model):
-    adminID = models.CharField(primary_key=True, max_length=30)
-    admin_name = models.CharField(max_length=30)
+    username = models.CharField(primary_key=True, max_length=30)
     password = models.CharField(max_length=30)
         
 
 class Tournament(models.Model):
     organizerOwner = models.CharField(max_length=30)
-    #organizerOwnerID = models.ForeignKey('Organizer', on_delete=models.DO_NOTHING, related_name= '+')
     tournamentTitle = models.CharField(max_length=30, unique= True, primary_key=True)
     date_created = models.DateTimeField('date_created', auto_now_add=True)
     date_start = models.DateTimeField('date_start')
@@ -53,13 +54,11 @@ class Tournament(models.Model):
 class Fan(models.Model):
     user_Fan = models.CharField(max_length=30) #user_fan is a fan of user_idol
     user_Idol = models.CharField(max_length=30)
-    idolID = models.ForeignKey('Player', on_delete=models.DO_NOTHING,related_name= '+')
 
 
 class Voucher(models.Model):
     user_voucher = models.CharField(max_length=30) #user_voucher vouches for user_receiver
     user_receiver = models.CharField(max_length=30)
-    receiverID = models.ForeignKey('Organizer', on_delete=models.DO_NOTHING,related_name= '+')
 
 
 class Entrant(models.Model):
@@ -75,15 +74,17 @@ class Record(models.Model):
 
 
 class Banned(models.Model):
-    adminID = models.ForeignKey('Administrator', on_delete=models.DO_NOTHING,related_name= '+')
-    bannedUser = models.CharField(max_length=30)
+    user = models.CharField(max_length=30)
+    admin = models.CharField(max_length=30)
+    date = models.DateField(default="1986-09-28")
+    reason = models.CharField(max_length=50)
 
 
 class Match(models.Model):
-    matchID = models.IntegerField(primary_key=True, unique=True)
-    tournamentName = models.ForeignKey('Tournament', on_delete=models.DO_NOTHING, related_name= '+')
-    playerWinner = models.CharField(max_length=30)
-    playerLoser = models.CharField(max_length=30)
+    playerA = models.CharField(max_length=30)
+    playerB = models.CharField(max_length=30)
+    tournamentTitle = models.CharField(max_length=30)
+    winner = models.CharField(max_length=30)
 
 
 class Comment(models.Model):
