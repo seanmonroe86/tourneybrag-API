@@ -78,11 +78,11 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'TourneyBrag v4',#'tourneybrag',
-	    'USER': 'postgres',#'tourneybrag',
-	    'PASSWORD': 'postgres',#'tourneybrag',
+        'NAME': 'tourneybrag',
+	    'USER': 'tourneybrag',
+	    'PASSWORD': 'tourneybrag',
 	    'HOST': '127.0.0.1',
-	    'PORT': '5432',#'35000',
+	    'PORT': '35000',
     }
 }
 
