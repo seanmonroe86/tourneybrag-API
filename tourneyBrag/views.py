@@ -297,14 +297,14 @@ class VoucherList(APIView):
         newVoucherObj.save()
         return Response(status=status.HTTP_201_CREATED)
 
-class CommentList(APIView):
-    def post(self, request, *args, **kwargs):
-        commentAuthor = request.data['author_name']
-        commentReceiver = request.data['receiver_name']
-        commentItself = request.data['actual_comment']
-        newComment = Comment(author_name = commentAuthor, receiver_name = commentReceiver, actual_comment = commentItself)
-        newComment.save()
-        return Response(status=status.HTTP_201_CREATED)
+#class CommentList(APIView):
+#    def post(self, request, *args, **kwargs):
+#        commentAuthor = request.data['author_name']
+#        commentReceiver = request.data['receiver_name']
+3        commentItself = request.data['actual_comment']
+#        newComment = Comment(author_name = commentAuthor, receiver_name = commentReceiver, actual_comment = commentItself)
+3        newComment.save()
+#        return Response(status=status.HTTP_201_CREATED)
 
 class BanHimList(APIView):
     def post(self, request, *args, **kwargs):
