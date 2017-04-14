@@ -74,6 +74,7 @@ class Banned(models.Model):
     admin = models.CharField(max_length=30)
     date = models.DateField(default="1986-09-28")
     reason = models.CharField(max_length=50)
+    bannedUntil = models.DateField(default="1986-09-28")
 
 
 class Match(models.Model):
