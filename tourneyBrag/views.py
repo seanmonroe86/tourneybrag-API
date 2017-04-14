@@ -64,7 +64,9 @@ class PlayerPage(APIView):
                 has_been_accepted = True
                 ).values('tournament_entered')
         f = Fan.objects.filter(user_Idol = playerID).values('user_Fan')
-        c = Comment.objects.filter(receiver_name = playerID).values('author_name', 'actual_comment')
+        c = Comment.objects.filter(
+                receiver_name = playerID
+                ).values('author_name', 'actual_comment')
         player = {
                 'username': p.username,
                 'accountType': p.accountType,
@@ -103,7 +105,9 @@ class OrganizerPage(APIView):
                 user_receiver = organizerID
                 ).values('user_voucher')
         t = Tournament.objects.filter(organizerOwner = organizerID)
-        c = Comment.objects.filter(receiver_name = organizerID).values('author_name', 'actual_comment')
+        c = Comment.objects.filter(
+                receiver_name = organizerID
+                ).values('author_name', 'actual_comment')
         for tourney in [entry for entry in t]:
             tourneyList.append({'tournament_name': tourney.tournamentTitle})
         organizer = {
@@ -134,8 +138,12 @@ class TournamentPage(APIView):
         c = Comment.objects.filter(receiver_name = tourneyName).values('author_name', 'actual_comment')
         e = Entrant.objects.filter(
                 tournament_entered = t,
-                has_been_accepted = True).values('player_entrant')
-        a = Entrant.objects.filter(tournament_entered = tourneyName, has_been_accepted=False).values('player_entrant')  #players who applied but not been accepted
+                has_been_accepted = True
+                ).values('player_entrant')
+        a = Entrant.objects.filter(
+                tournament_entered = tourneyName,
+                has_been_accepted = False
+                ).values('player_entrant')  #players who applied but not been accepted
         m = Match.objects.filter(tournamentTitle=tourneyName)
 
         matchList = []
@@ -194,10 +202,6 @@ class PlayerList(mixins.ListModelMixin,
                 return self.list(request, *args, **kwargs)
 
         def post(self, request, *args, **kwargs):
-#                num = random.randint(0, 2147483647)
-#                while Player.objects.filter(playerID=num):
-#                                        num = random.randint(0, 2147483647)
-#                request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
 
 
@@ -212,10 +216,6 @@ class OrganizerList(mixins.ListModelMixin,
                 return self.list(request, *args, **kwargs)
 
         def post(self, request, *args, **kwargs):
-#                num = random.randint(0, 2147483647)
-#                while Player.objects.filter(playerID=num):
-#                                        num = random.randint(0, 2147483647)
-#                request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
 
 
@@ -241,24 +241,25 @@ class TournamentsSpecificList(mixins.ListModelMixin,
 
         def get(self, request, *args, **kwargs):
                 organizr = request.data('organizerOwner')
-                queryset = Tournament.objects.all()#filter(organizerOwner = organizr)
-                allSet = TournamentSerializer(queryset, many=True)
+                queryset = Tournament.objects.all()
+                allSet = TournamentSerializer(queryset, many = True)
                 print(allSet)
                 return Response(allSet.data)
 
         def post(self, request, *args, **kwargs):
-#                num = random.randint(0, 2147483647)
-#                while Player.objects.filter(playerID=num):
-#                                        num = random.randint(0, 2147483647)
-#                request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
 
 class ApplicationList(APIView):
     def get(self, request, *args, **kwargs):
         organizerName = request.META['QUERY_STRING']
         theOrganizer = Organizer.objects.get(username = organizerName)
-        allTournaments = Tournament.objects.filter(organizerOwner = theOrganizer).values('tournamentTitle')
-        allEntrants = Entrant.objects.filter(tournament_entered__in = allTournaments, has_been_accepted=False).values('tournament_entered', 'player_entrant')
+        allTournaments = Tournament.objects.filter(
+                organizerOwner = theOrganizer
+                ).values('tournamentTitle')
+        allEntrants = Entrant.objects.filter(
+                tournament_entered__in = allTournaments,
+                has_been_accepted = False
+                ).values('tournament_entered', 'player_entrant')
 
         entrantsList = []
 
@@ -271,7 +272,11 @@ class ApplicationList(APIView):
     def post(self, request, *args, **kwargs):
         specificTouney = request.data['tournament_entered']
         player = request.data['player_entrant']
-        newEntrant = Entrant(player_entrant = player, tournament_entered = specificTouney, has_been_accepted = False)
+        newEntrant = Entrant(
+                player_entrant = player,
+                tournament_entered = specificTouney,
+                has_been_accepted = False
+                )
         try:
             newEntrant.save()
             return Response(status=status.HTTP_201_CREATED)
@@ -284,15 +289,9 @@ class ApplicationList(APIView):
 
 
 class FanList(APIView):
-    #No get because this will be done in player profile
-   # def get(self, request, *args, **kwargs):
-    #    fanList = Fan.objects.filter(idolID = self.kwargs['pk'])
-     #   return JsonResponse(fanList, status=status.HTTP_200_OK)
-
     def post(self, request, *args, **kwargs):
         newFan = request.data['user_Fan']
         theIdol = request.data['user_Idol']
-        #idolsID = request.data['idolID']
         newFanObj = Fan(user_Fan = newFan, user_Idol = theIdol)
         try:
             newFanObj.save()
@@ -301,17 +300,13 @@ class FanList(APIView):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class VoucherList(APIView):
-    # No get because this will be done in organizer profile
-    #def get(self, request, *args, **kwargs):
-    #    voucherList = Voucher.objects.filter(user_receiver= request.META['QUERY_STRING']).values('user_voucher')#request.META['QUERY_STRING'])
-    #    vouchDict = {'voucherName':[voucher for voucher in voucherList]}
-    #    return JsonResponse(vouchDict, status=status.HTTP_200_OK)
-
     def post(self, request, *args, **kwargs):
         newVoucher = request.data['user_voucher']
         theReceiver = request.data['user_receiver']
-        #receiversID = request.data['receiverID']
-        newVoucherObj = Voucher(user_voucher = newVoucher, user_receiver = theReceiver)
+        newVoucherObj = Voucher(
+                user_voucher = newVoucher,
+                user_receiver = theReceiver
+                )
         try:
             newVoucherObj.save()
             return Response(status=status.HTTP_201_CREATED)
@@ -324,7 +319,12 @@ class BanHimList(APIView):
         userThatIsBanned = request.data['bannedUser']
         timeBanned = request.data['bannedUntil']
         reasonForBan = request.data['reason']
-        newBannedUser = Banned(admin = actingAdmin, bannedUser = userThatIsBanned, bannedUntil = timeBanned, reason = reasonForBan)
+        newBannedUser = Banned(
+                admin = actingAdmin,
+                bannedUser = userThatIsBanned,
+                bannedUntil = timeBanned,
+                reason = reasonForBan
+                )
         try:
             newBannedUser.save()
             return Response(status=status.HTTP_201_CREATED)
@@ -337,7 +337,12 @@ class MatchDetail(APIView): #Post = entering new match, PUT is updating
         plyrA = request.data['playerA']
         plyrB = request.data['playerB']
         theWinner = ""
-        newMatch = Match(tournamentTitle = tourneyTitle, playerA = plyrA, playerB = plyrB, winner = theWinner)
+        newMatch = Match(
+                tournamentTitle = tourneyTitle,
+                playerA = plyrA,
+                playerB = plyrB,
+                winner = theWinner
+                )
         try:
             newMatch.save()
             return Response(status=status.HTTP_201_CREATED)
@@ -349,57 +354,18 @@ class MatchDetail(APIView): #Post = entering new match, PUT is updating
         plyrA = request.data['playerA']
         plyrB = request.data['playerB']
         theWinner = request.data['winner']
-        theMatch = Match.objects.get(tournamentTitle = tourneyTitle, playerA = plyrA, playerB = plyrB)
+        theMatch = Match.objects.get(
+                tournamentTitle = tourneyTitle,
+                playerA = plyrA,
+                playerB = plyrB
+                )
         if theMatch:
             theMatch.winner = theWinner
             try:
-                theMatch.save(update_fields=['winner'], force_update=True)
+                theMatch.save(update_fields = ['winner'], force_update = True)
                 return Response(status = status.HTTP_202_ACCEPTED)
             except:
                 return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         else:
             Response(status= status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-#def CreateTournament(request):
-#    # Query for existing tourney name, insert into database, reply with affirm
-#    return None
-#
-#def ModifyTournament(request):
-#    # Update tourney values in database, reply with affirm
-#    return None
-#
-#def Application(request):
-#    # Modify tourney, player, organizer for type of application management,
-#    # reply with affirm
-#    return None
-#
-#def Ban(request): DONE
-#    # Modify profile of given username with appropriate values, reply with
-#    # affirm
-#    return None
-#
-#def BecomeFan(request): DONE
-#    # Modify profiles of given usernames with appropriate values, reply with
-#    # affirm
-#    return None
-#
-#def BecomeVoucher(request): DONE
-#    # Modify profiles of given usernames with appropriate values, reply with
-#    # affirm
-#    return None
-#
-#def ModifyProfile(request):
-#    # Update profile values in database, reply with affirm
-#    return None
-#
-#def Logout(request):
-#    # required?
-#    return None
-#
-#
-#def Modify Match: DONE
-#
-#
-#
-#
-#
