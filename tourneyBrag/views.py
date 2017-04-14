@@ -87,8 +87,11 @@ class PlayerPage(APIView):
                 gamePlayed = p['gamePlays'],
                 mainCharacter = p['mainchar'],
                 )
-        player.save()
-        return HttpResponse("Player created", status = 201)
+        try:
+            player.save()
+            return HttpResponse("Player created", status = 201)
+        except:
+            return HttpResponse("Error creating player", status = 405)
 
 
 class OrganizerPage(APIView):
@@ -117,8 +120,11 @@ class OrganizerPage(APIView):
                 username = o['username'],
                 password = o['password'],
                 )
-        organizer.save()
-        return HttpResponse("Organizer created", status = 201)
+        try:
+            organizer.save()
+            return HttpResponse("Organizer created", status = 201)
+        except:
+            return HttpResponse("Error creating organizer", status = 405)
 
 
 class TournamentPage(APIView):
@@ -155,8 +161,11 @@ class TournamentPage(APIView):
                 tournamentTitle = t['name'],
                 date_start = t['date']
                 )
-        tourney.save()
-        return HttpResponse("Tournament created", status = 201)
+        try:
+            tourney.save()
+            return HttpResponse("Tournament created", status = 201)
+        except:
+            return HttpResponse("Error creating tournament", status = 405)
 
 
 class MakeComment(APIView):
@@ -167,8 +176,11 @@ class MakeComment(APIView):
                 receiver_name = c['receiver'],
                 actual_comment = c['comment']
                 )
-        comment.save()
-        return HttpResponse("Comment posted", status = 201)
+        try:
+            comment.save()
+            return HttpResponse("Comment posted", status = 201)
+        except:
+            return HttpResponse("Error creating comment", status = 405)
 
 
 #Lists all players
@@ -260,8 +272,11 @@ class ApplicationList(APIView):
         specificTouney = request.data['tournament_entered']
         player = request.data['player_entrant']
         newEntrant = Entrant(player_entrant = player, tournament_entered = specificTouney, has_been_accepted = False)
-        newEntrant.save()
-        return Response(status=status.HTTP_201_CREATED)
+        try:
+            newEntrant.save()
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def put(self, request, *args, **kwargs):
         pass
@@ -279,8 +294,11 @@ class FanList(APIView):
         theIdol = request.data['user_Idol']
         #idolsID = request.data['idolID']
         newFanObj = Fan(user_Fan = newFan, user_Idol = theIdol)
-        newFanObj.save()
-        return Response(status=status.HTTP_201_CREATED)
+        try:
+            newFanObj.save()
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class VoucherList(APIView):
     # No get because this will be done in organizer profile
@@ -294,17 +312,11 @@ class VoucherList(APIView):
         theReceiver = request.data['user_receiver']
         #receiversID = request.data['receiverID']
         newVoucherObj = Voucher(user_voucher = newVoucher, user_receiver = theReceiver)
-        newVoucherObj.save()
-        return Response(status=status.HTTP_201_CREATED)
-
-#class CommentList(APIView):
-#    def post(self, request, *args, **kwargs):
-#        commentAuthor = request.data['author_name']
-#        commentReceiver = request.data['receiver_name']
-3        commentItself = request.data['actual_comment']
-#        newComment = Comment(author_name = commentAuthor, receiver_name = commentReceiver, actual_comment = commentItself)
-3        newComment.save()
-#        return Response(status=status.HTTP_201_CREATED)
+        try:
+            newVoucherObj.save()
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class BanHimList(APIView):
     def post(self, request, *args, **kwargs):
@@ -313,8 +325,11 @@ class BanHimList(APIView):
         timeBanned = request.data['bannedUntil']
         reasonForBan = request.data['reason']
         newBannedUser = Banned(admin = actingAdmin, bannedUser = userThatIsBanned, bannedUntil = timeBanned, reason = reasonForBan)
-        newBannedUser.save()
-        return Response(status=status.HTTP_201_CREATED)
+        try:
+            newBannedUser.save()
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class MatchDetail(APIView): #Post = entering new match, PUT is updating
     def post(self, request, *args, **kwargs):
@@ -323,8 +338,11 @@ class MatchDetail(APIView): #Post = entering new match, PUT is updating
         plyrB = request.data['playerB']
         theWinner = ""
         newMatch = Match(tournamentTitle = tourneyTitle, playerA = plyrA, playerB = plyrB, winner = theWinner)
-        newMatch.save()
-        return Response(status=status.HTTP_201_CREATED)
+        try:
+            newMatch.save()
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def put(self, request, *args, **kwargs):
         tourneyTitle = request.data['tournamentTitle']
@@ -334,8 +352,11 @@ class MatchDetail(APIView): #Post = entering new match, PUT is updating
         theMatch = Match.objects.get(tournamentTitle = tourneyTitle, playerA = plyrA, playerB = plyrB)
         if theMatch:
             theMatch.winner = theWinner
-            theMatch.save(update_fields=['winner'], force_update=True)
-            return Response(status = status.HTTP_202_ACCEPTED)
+            try:
+                theMatch.save(update_fields=['winner'], force_update=True)
+                return Response(status = status.HTTP_202_ACCEPTED)
+            except:
+                return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
         else:
             Response(status= status.HTTP_422_UNPROCESSABLE_ENTITY)
 
