@@ -192,17 +192,45 @@ class MakeComment(APIView):
 
 
 #Lists all players
-class PlayerList(mixins.ListModelMixin,
-                                 mixins.CreateModelMixin,
-                                 generics.GenericAPIView):
-        queryset = Player.objects.all()
-        serializer_class = PlayerSerializer
+class PlayerList(APIView):
 
         def get(self, request, *args, **kwargs):
-                return self.list(request, *args, **kwargs)
+            allPlayers = Player.objects.all()
 
-        def post(self, request, *args, **kwargs):
-                return self.create(request, *args, **kwargs)
+
+            playerList = []
+
+            for player in allPlayers:
+                playerList.append({'username': player.username,
+                                    'gamePlayed': player.tournamentTitle,
+                                    'mainCharacter': player.date_created,
+                                    'accountType': player.date_start,
+                                    'location': player.loc})
+
+            return JsonResponse(playerList, status=status.HTTP_200_OK)
+
+        def post(self, request, *args, **kwargs): #This is not to
+            username = Player.objects.get(username = request.data['username'])
+
+            if username:
+                return Response("Player Already Exists.", status=status.HTTP_409_CONFLICT)
+            else:
+                new_username = request.data['username']
+                new_password = request.data['password']
+                new_gamePlayed = request.data['gamePlayed']
+                new_mainCharacter = request.data['mainCharacter']
+                new_loc = request.data['loc']
+
+                newPlayer = Player(username=new_username,
+                                   password=new_password,
+                                   gamePlayed=new_gamePlayed,
+                                   mainCharacter=new_mainCharacter,
+                                   accountType="player",
+                                   loc=new_loc)
+
+                newPlayer.save()
+                return Response(status=status.HTTP_201_CREATED)
+
 
 
 #Lists all organizerss
@@ -220,14 +248,21 @@ class OrganizerList(mixins.ListModelMixin,
 
 
 #Lists all tournamnts
-class TournamentsList(mixins.ListModelMixin,
-                                 mixins.CreateModelMixin,
-                                 generics.GenericAPIView):
-        queryset = Tournament.objects.all()
-        serializer_class = TournamentSerializer
+class TournamentsList(APIView):
 
         def get(self, request, *args, **kwargs):
-                return self.list(request, *args, **kwargs)
+            allTourneys = Tournament.objects.all()
+
+            tourneyList = []
+
+            for tournament in allTourneys:
+                tourneyList.append({'organizerOwner':tournament.organizerOwner,
+                                    'tournamentTitle': tournament.tournamentTitle,
+                                    'date_created': tournament.date_created,
+                                    'date_start': tournament.date_start})
+
+
+            return JsonResponse(tourneyList, status=status.HTTP_200_OK)
 
         def post(self, request, *args, **kwargs):
                 return self.create(request, *args, **kwargs)
@@ -243,7 +278,6 @@ class TournamentsSpecificList(mixins.ListModelMixin,
                 organizr = request.data('organizerOwner')
                 queryset = Tournament.objects.all()
                 allSet = TournamentSerializer(queryset, many = True)
-                print(allSet)
                 return Response(allSet.data)
 
         def post(self, request, *args, **kwargs):
@@ -267,7 +301,7 @@ class ApplicationList(APIView):
             entrantsList.append({
             'theTournament': entrant.tournament_entered,
             'entrant': entrant.player_entrant})
-        return JsonResponse(entrantsList)
+        return JsonResponse(entrantsList, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         specificTouney = request.data['tournament_entered']
@@ -287,7 +321,6 @@ class ApplicationList(APIView):
         pass
 
 
-
 class FanList(APIView):
     def post(self, request, *args, **kwargs):
         newFan = request.data['user_Fan']
@@ -298,6 +331,7 @@ class FanList(APIView):
             return Response(status=status.HTTP_201_CREATED)
         except:
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 class VoucherList(APIView):
     def post(self, request, *args, **kwargs):
@@ -312,6 +346,7 @@ class VoucherList(APIView):
             return Response(status=status.HTTP_201_CREATED)
         except:
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 class BanHimList(APIView):
     def post(self, request, *args, **kwargs):
@@ -330,6 +365,7 @@ class BanHimList(APIView):
             return Response(status=status.HTTP_201_CREATED)
         except:
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 class MatchDetail(APIView): #Post = entering new match, PUT is updating
     def post(self, request, *args, **kwargs):
