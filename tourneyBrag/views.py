@@ -19,16 +19,16 @@ class Login(APIView):
                 if u.password == userPass:
                     try:
                         b = Banned.objects.get(user = userID)
-                        ban = {'date': b.date,'reason': b.reason}
+                        ban = {'date': b.date, 'reason': b.reason}
                     except Banned.DoesNotExist:
-                        ban = {'date': 0000-00-00,'reason': ''}
+                        ban = {'date': '0000-00-00', 'reason': ''}
                     return JsonResponse(ban)
                 else:
-                    r = {'date': 9999-99-99,'reason': 'Invalid password'}
+                    r = {'date': '9999-99-99', 'reason': 'Invalid password'}
                     return JsonResponse(r)
             except Type.DoesNotExist:
                 pass
-        r = {'date': 1234-56-78,'reason': 'User not found'}
+        r = {'date': '1234-56-78', 'reason': 'User not found'}
         return JsonResponse(r)
 
 class Register(APIView):
