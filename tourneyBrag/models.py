@@ -31,7 +31,7 @@ class OrganizerProfile(object):
         self.organID = organID
         self.organName - organName
         self.pw = pw
-        self.tourneyTitle = touneyTitle
+        self.tourneyTitle = tourneyTitle
         self.actualComment = actualComment
         self.commentAuthor = commentAuthor
 

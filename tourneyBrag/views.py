@@ -1,5 +1,5 @@
 from django.http import HttpResponse, JsonResponse
-from rest_framework import generics, mixins
+from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tourneyBrag.models import *
@@ -123,17 +123,27 @@ class OrganizerPage(APIView):
 
 class TournamentPage(APIView):
     def get(self, request, *args, **kwargs):
-        tourneyID = request.META['QUERY_STRING']
-        t = Tournament.objects.get(tournamentTitle = tourneyID)
-        c = Comment.objects.filter(receiver_name = tourneyID).values('author_name', 'actual_comment')
+        tourneyName = request.META['QUERY_STRING']
+        t = Tournament.objects.get(tournamentTitle = tourneyName)
+        c = Comment.objects.filter(receiver_name = tourneyName).values('author_name', 'actual_comment')
         e = Entrant.objects.filter(
                 tournament_entered = t,
                 has_been_accepted = True).values('player_entrant')
+        a = Entrant.objects.filter(tournament_entered = tourneyName, has_been_accepted=False).values('player_entrant')  #players who applied but not been accepted
+        m = Match.objects.filter(tournamentTitle=tourneyName)
+
+        matchList = []
+
+        for aMatch in m:
+            matchList.append({aMatch.playerA, aMatch.playerB})
+
         tourney = {
                 'name': t.tournamentTitle,
                 'organizer': t.organizerOwner,
                 'date': t.date_start,
                 'participants': [entry for entry in e],
+                'applicants': [applicant for applicant in a],
+                'matches': matchList,
                 'comments': [entry for entry in c],
                 }
         return JsonResponse(tourney)
@@ -231,6 +241,32 @@ class TournamentsSpecificList(mixins.ListModelMixin,
 #                request.data['playerID'] = num
                 return self.create(request, *args, **kwargs)
 
+class ApplicationList(APIView):
+    def get(self, request, *args, **kwargs):
+        organizerName = request.META['QUERY_STRING']
+        theOrganizer = Organizer.objects.get(username = organizerName)
+        allTournaments = Tournament.objects.filter(organizerOwner = theOrganizer).values('tournamentTitle')
+        allEntrants = Entrant.objects.filter(tournament_entered__in = allTournaments, has_been_accepted=False).values('tournament_entered', 'player_entrant')
+
+        entrantsList = []
+
+        for entrant in allEntrants:
+            entrantsList.append({
+            'theTournament': entrant.tournament_entered,
+            'entrant': entrant.player_entrant})
+        return JsonResponse(entrantsList)
+
+    def post(self, request, *args, **kwargs):
+        specificTouney = request.data['tournament_entered']
+        player = request.data['player_entrant']
+        newEntrant = Entrant(player_entrant = player, tournament_entered = specificTouney, has_been_accepted = False)
+        newEntrant.save()
+        return Response(status=status.HTTP_201_CREATED)
+
+    def put(self, request, *args, **kwargs):
+        pass
+
+
 
 class FanList(APIView):
     #No get because this will be done in player profile
@@ -291,7 +327,17 @@ class MatchDetail(APIView): #Post = entering new match, PUT is updating
         return Response(status=status.HTTP_201_CREATED)
 
     def put(self, request, *args, **kwargs):
-        pass    
+        tourneyTitle = request.data['tournamentTitle']
+        plyrA = request.data['playerA']
+        plyrB = request.data['playerB']
+        theWinner = request.data['winner']
+        theMatch = Match.objects.get(tournamentTitle = tourneyTitle, playerA = plyrA, playerB = plyrB)
+        if theMatch:
+            theMatch.winner = theWinner
+            theMatch.save(update_fields=['winner'], force_update=True)
+            return Response(status = status.HTTP_202_ACCEPTED)
+        else:
+            Response(status= status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 #def CreateTournament(request):
 #    # Query for existing tourney name, insert into database, reply with affirm
@@ -328,5 +374,11 @@ class MatchDetail(APIView): #Post = entering new match, PUT is updating
 #def Logout(request):
 #    # required?
 #    return None
+#
+#
+#def Modify Match: DONE
+#
+#
+#
 #
 #
