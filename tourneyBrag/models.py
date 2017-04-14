@@ -41,10 +41,10 @@ class Administrator(models.Model):
         
 
 class Tournament(models.Model):
-    organizerOwner = models.CharField(max_length=30)
-    tournamentTitle = models.CharField(max_length=30, unique= True, primary_key=True)
-    date_created = models.DateTimeField('date_created', auto_now_add=True)
-    date_start = models.DateTimeField('date_start')
+    organizerOwner = models.CharField(max_length = 30)
+    tournamentTitle = models.CharField(max_length = 30, unique = True, primary_key = True)
+    date_created = models.DateField('date_created', auto_now_add = True)
+    date_start = models.DateField('date_start', default = '1986-09-28')
 
 
 class Fan(models.Model):
@@ -58,7 +58,7 @@ class Voucher(models.Model):
 
 
 class Entrant(models.Model):
-    player_entrant = models.CharField(max_length=30)
+    name = models.CharField(max_length=30)
     tournament_entered = models.ForeignKey('Tournament', on_delete=models.DO_NOTHING,related_name= '+')
     has_been_accepted = models.BooleanField()
 

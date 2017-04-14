@@ -60,7 +60,7 @@ class PlayerPage(APIView):
         except Player.DoesNotExist:
             return HttpResponse("Player {} not found.".format(playerID), status = 404)
         e = Entrant.objects.filter(
-                player_entrant = playerID,
+                name = playerID,
                 has_been_accepted = True
                 ).values('tournament_entered')
         f = Fan.objects.filter(user_Idol = playerID).values('user_Fan')
@@ -139,11 +139,11 @@ class TournamentPage(APIView):
         e = Entrant.objects.filter(
                 tournament_entered = t,
                 has_been_accepted = True
-                ).values('player_entrant')
+                ).values('name')
         a = Entrant.objects.filter(
                 tournament_entered = tourneyName,
                 has_been_accepted = False
-                ).values('player_entrant')  #players who applied but not been accepted
+                ).values('name')  #players who applied but not been accepted
         m = Match.objects.filter(tournamentTitle=tourneyName)
 
         matchList = []
@@ -293,21 +293,21 @@ class ApplicationList(APIView):
         allEntrants = Entrant.objects.filter(
                 tournament_entered__in = allTournaments,
                 has_been_accepted = False
-                ).values('tournament_entered', 'player_entrant')
+                ).values('tournament_entered', 'name')
 
         entrantsList = []
 
         for entrant in allEntrants:
             entrantsList.append({
             'theTournament': entrant.tournament_entered,
-            'entrant': entrant.player_entrant})
+            'name': entrant.name})
         return JsonResponse(entrantsList, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         specificTouney = request.data['tournament_entered']
-        player = request.data['player_entrant']
+        player = request.data['name']
         newEntrant = Entrant(
-                player_entrant = player,
+                name = player,
                 tournament_entered = specificTouney,
                 has_been_accepted = False
                 )
