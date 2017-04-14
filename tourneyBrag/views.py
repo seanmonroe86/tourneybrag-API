@@ -135,7 +135,7 @@ class TournamentPage(APIView):
         matchList = []
 
         for aMatch in m:
-            matchList.append({aMatch.playerA, aMatch.playerB})
+            matchList.append({"playerA": aMatch.playerA, "playerB": aMatch.playerB})
 
         tourney = {
                 'name': t.tournamentTitle,
