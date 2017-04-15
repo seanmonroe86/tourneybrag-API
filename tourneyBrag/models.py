@@ -32,16 +32,6 @@ class Administrator(models.Model):
     password = models.CharField(max_length=30)
 
 
-class OrganizerProfile(object):
-    def __init__(self, organID, organName, pw, tourneyTitle, actualComment, commentAuthor):
-        self.organID = organID
-        self.organName - organName
-        self.pw = pw
-        self.tourneyTitle = tourneyTitle
-        self.actualComment = actualComment
-        self.commentAuthor = commentAuthor
-        
-
 class Tournament(models.Model):
     organizerOwner = models.CharField(max_length = 30)
     tournamentTitle = models.CharField(max_length = 30, unique = True, primary_key = True)
