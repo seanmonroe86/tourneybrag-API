@@ -195,7 +195,7 @@ class MakeComment(APIView):
 class UsersList(APIView):
     def post(self, request, *args, **kwargs):
         terms = json.loads(request.body)
-        u, d = terms["username"], terms["description"]
+        u, t, d = terms["username"], terms["type"], terms["description"]
         if u == "":
             players = Player.objects.all().values("username", "description")
             organizers = Organizer.objects.all().values("username", "description")
@@ -205,7 +205,10 @@ class UsersList(APIView):
         if d != "":
             players = players.filter(description = d)
             organizers = organizers.objects.filter(description = d)
-        users = chain(players, organizers)
+        if t == "": users = chain(players, organizers)
+        elif t == "player": users = players
+        elif t == "organizer": users = organizers
+        else: users = [{"username": "NULL", "description": "NULL"}]
         return JsonResponse({"users": [entry for entry in users]})
 
 
@@ -262,7 +265,7 @@ class ApplicationList(APIView):
         pass
 
 
-class FanList(APIView):
+class MakeFan(APIView):
     def post(self, request, *args, **kwargs):
         newFan = request.data['user_Fan']
         theIdol = request.data['user_Idol']
@@ -274,7 +277,7 @@ class FanList(APIView):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class VoucherList(APIView):
+class MakeVoucher(APIView):
     def post(self, request, *args, **kwargs):
         newVoucher = request.data['user_voucher']
         theReceiver = request.data['user_receiver']
