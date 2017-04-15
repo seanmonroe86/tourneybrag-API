@@ -11,6 +11,7 @@ admin.site.register(Voucher)
 admin.site.register(Entrant)
 admin.site.register(Record)
 admin.site.register(Banned)
+admin.site.register(Match)
 admin.site.register(Comment)
 
 # Register your models here.
