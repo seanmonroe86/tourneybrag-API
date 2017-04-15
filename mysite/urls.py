@@ -12,7 +12,7 @@ urlpatterns = [
     url(r'^comment', views.MakeComment.as_view()),
     url(r'^register', views.Register.as_view()),
     url(r'^voucher', views.MakeVoucher.as_view()),
-    url(r'^ban', views.BanHimList.as_view()),
+    url(r'^ban', views.BanThem.as_view()),
     url(r'^fan', views.MakeFan.as_view()),
     url(r'^application', views.ApplicationList.as_view()),
     url(r'^create-match', views.MatchDetail.as_view()),

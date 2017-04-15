@@ -292,7 +292,7 @@ class MakeVoucher(APIView):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class BanHimList(APIView):
+class BanThem(APIView):
     def post(self, request, *args, **kwargs):
         actingAdmin = request.data['admin']
         userThatIsBanned = request.data['bannedUser']
@@ -300,8 +300,8 @@ class BanHimList(APIView):
         reasonForBan = request.data['reason']
         newBannedUser = Banned(
                 admin = actingAdmin,
-                bannedUser = userThatIsBanned,
-                bannedUntil = timeBanned,
+                user = userThatIsBanned,
+                date = timeBanned,
                 reason = reasonForBan
                 )
         try:
