@@ -162,8 +162,13 @@ class TournamentPage(APIView):
                 ).values('name')
         a = Entrant.objects.filter(
                 tournament_entered = tourneyName,
-                has_been_accepted = False
+                has_been_accepted = False,
+                has_been_denied = False
                 ).values('name')  #players who applied but not been accepted
+        d = Entrant.objects.filter(
+                tournament_entered = tourneyName,
+                has_been_denied = True
+                ).values('name')  #players who applied and denied
         m = Match.objects.filter(tournamentTitle=tourneyName)
 
         matchList = []
@@ -177,6 +182,7 @@ class TournamentPage(APIView):
                 'date': t.date_start,
                 'participants': [entry for entry in e],
                 'applicants': [applicant for applicant in a],
+                'denied': [entry for entry in d],
                 'matches': matchList,
                 'comments': [entry for entry in c],
                 }
@@ -214,7 +220,7 @@ class MakeComment(APIView):
 class UsersList(APIView):
     def post(self, request, *args, **kwargs):
         terms = json.loads(request.body)
-        u, t, d = terms["username"], terms["type"], terms["description"]
+        u, t, d = terms["username"], terms["acctType"], terms["description"]
         if u == "":
             players = Player.objects.all().values(
                     "username", "description", "acctType")
@@ -261,10 +267,24 @@ class ApplicationList(APIView):
             tourneys.append(tourney['tournamentTitle'])
         e = Entrant.objects.filter(
                 tournament_entered__in = tourneys,
-                has_been_accepted = False
+                has_been_accepted = False,
+                has_been_denied = False
                 ).values('name', 'tournament_entered')
         return JsonResponse({"entrants": [entry for entry in e]})
 
+    def post(self, request, *args, **kwargs):
+        denied = request.data['denied']
+        e = Entrant.objects.get(
+                name = request.data['name'],
+                tournament_entered = request.data['tournament_entered']
+                )
+        if not denied: e.has_been_accepted = True
+        else: e.has_been_denied = True
+        e.save()
+        return HttpResponse("Applicant processed", status = 200)
+
+
+class ApplicationSign(APIView):
     def post(self, request, *args, **kwargs):
         specificTouney = request.data['tournament_entered']
         player = request.data['name']

@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^ban', views.BanThem.as_view()),
     url(r'^fan', views.MakeFan.as_view()),
     url(r'^application', views.ApplicationList.as_view()),
+    url(r'^apply', views.ApplicationSign.as_view()),
     url(r'^create-match', views.MatchDetail.as_view()),
     url(r'^list-users', views.UsersList.as_view()),
     url(r'^list-tournaments', views.TournamentsList.as_view()),
