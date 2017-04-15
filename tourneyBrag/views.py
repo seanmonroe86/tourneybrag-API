@@ -214,21 +214,16 @@ class PlayerList(APIView):
 
 
 #Lists all organizerss
-class OrganizerList(mixins.ListModelMixin,
-                                 mixins.CreateModelMixin,
-                                 generics.GenericAPIView):
-        queryset = Organizer.objects.all()
-        serializer_class = OrganizerSerializer
+class OrganizerList(APIView):
 
         def get(self, request, *args, **kwargs):
-                return self.list(request, *args, **kwargs)
+            allOrganizers = Organizer.objects.all()
 
-        def post(self, request, *args, **kwargs):
-#                num = random.randint(0, 2147483647)
-#                while Player.objects.filter(playerID=num):
-#                                        num = random.randint(0, 2147483647)
-#                request.data['playerID'] = num
-                return self.create(request, *args, **kwargs)
+            organizerList = [theOrganizer.username for theOrganizer in allOrganizers]
+
+            return JsonResponse(organizerList, status=status.HTTP_200_OK)
+
+        #Doesn't need post since OrganizerPage does it
 
 
 #Lists all tournamnts
@@ -248,29 +243,25 @@ class TournamentsList(APIView):
 
             return JsonResponse(tourneyList, status=status.HTTP_200_OK)
 
-        def post(self, request, *args, **kwargs):
+        def post(self, request, *args, **kwargs):               #change this
                 return self.create(request, *args, **kwargs)
 
 #Lists all tournamnts for a specific organizer
-class TournamentsSpecificList(mixins.ListModelMixin,
-                                 mixins.CreateModelMixin,
-                                 generics.GenericAPIView):
-        queryset = Tournament.objects.all()
-        serializer_class = TournamentSerializer
+#class TournamentsSpecificList(APIView):           #Commented off since its not needed due to the fact that OrganizerPage does this
 
-        def get(self, request, *args, **kwargs):
-                organizr = request.data('organizerOwner')
-                queryset = Tournament.objects.all()#filter(organizerOwner = organizr)
-                allSet = TournamentSerializer(queryset, many=True)
-                #print(allSet)
-                return Response(allSet.data)
+        #def get(self, request, *args, **kwargs):
+#                organizr = request.data('organizerOwner')
+#                queryset = Tournament.objects.all()#filter(organizerOwner = organizr)
+#                allSet = TournamentSerializer(queryset, many=True)
+#                #print(allSet)
+#                return Response(allSet.data)
 
-        def post(self, request, *args, **kwargs):
+#        def post(self, request, *args, **kwargs):
 #                num = random.randint(0, 2147483647)
 #                while Player.objects.filter(playerID=num):
 #                                        num = random.randint(0, 2147483647)
 #                request.data['playerID'] = num
-                return self.create(request, *args, **kwargs)
+#                return self.create(request, *args, **kwargs)
 
 class ApplicationList(APIView):
     def get(self, request, *args, **kwargs):
