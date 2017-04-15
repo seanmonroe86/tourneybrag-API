@@ -84,17 +84,32 @@ class PlayerPage(APIView):
 
     def post(self, request, *args, **kwargs):
         p = json.loads(request.body)
-        player = Player(
-                username = p['username'],
-                password = p['password'],
-                gamePlayed = p['gamePlays'],
-                mainCharacter = p['mainchar'],
-                )
-        try:
-            player.save()
-            return HttpResponse("Player created", status = 201)
-        except:
-            return HttpResponse("Error creating player", status = 405)
+
+        thePlayer = Player.objects.get(username = p.username)
+
+        if thePlayer:
+            thePlayer.username = p['username']
+            thePlayer.password = p['password']
+            thePlayer.gamePlayed = p['gamePlays']
+            thePlayer.mainCharacter = p['mainchar']
+            thePlayer.loc = p['location']
+            thePlayer.description = p['description']
+            thePlayer.save()
+            return HttpResponse("Player Updated", status = 202)
+        else:
+            player = Player(
+                    username = p['username'],
+                    password = p['password'],
+                    gamePlayed = p['gamePlays'],
+                    mainCharacter = p['mainchar'],
+                    loc = p['location'],
+                    description=p['description']
+                    )
+            try:
+                player.save()
+                return HttpResponse("Player created", status = 201)
+            except:
+                return HttpResponse("Error creating player", status = 405)
 
 
 class OrganizerPage(APIView):
@@ -210,7 +225,7 @@ class UsersList(APIView):
 
 
 class TournamentsList(APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):   #is this supposed to be get?
         terms = json.loads(request.body)
         n, o, d = terms["name"], terms["organizer"], terms["date"]
         if n == "": tourneys = Tournament.objects.all().values(
@@ -313,36 +328,31 @@ class MatchDetail(APIView): #Post = entering new match, PUT is updating
         tourneyTitle = request.data['tournamentTitle']
         plyrA = request.data['playerA']
         plyrB = request.data['playerB']
-        theWinner = ""
-        newMatch = Match(
-                tournamentTitle = tourneyTitle,
-                playerA = plyrA,
-                playerB = plyrB,
-                winner = theWinner
-                )
-        try:
-            newMatch.save()
-            return Response(status=status.HTTP_201_CREATED)
-        except:
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        theWinner = ""   #If update is implemented, then check for winner string
 
-    def put(self, request, *args, **kwargs):
-        tourneyTitle = request.data['tournamentTitle']
-        plyrA = request.data['playerA']
-        plyrB = request.data['playerB']
-        theWinner = request.data['winner']
         theMatch = Match.objects.get(
-                tournamentTitle = tourneyTitle,
-                playerA = plyrA,
-                playerB = plyrB
-                )
+            tournamentTitle=tourneyTitle,
+            playerA=plyrA,
+            playerB=plyrB
+        )
+
         if theMatch:
-            theMatch.winner = theWinner
-            try:
-                theMatch.save(update_fields = ['winner'], force_update = True)
-                return Response(status = status.HTTP_202_ACCEPTED)
-            except:
-                return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            #theMatch.winner = theWinner
+            #try:
+            #    theMatch.save(update_fields = ['winner'], force_update = True)
+            #    return Response(status = status.HTTP_202_ACCEPTED)
+            #except:
+                return Response(status=status.HTTP_409_CONFLICT)
         else:
-            Response(status= status.HTTP_422_UNPROCESSABLE_ENTITY)
+            newMatch = Match(
+                    tournamentTitle = tourneyTitle,
+                    playerA = plyrA,
+                    playerB = plyrB,
+                    winner = theWinner
+                    )
+            try:
+                newMatch.save()
+                return Response(status=status.HTTP_201_CREATED)
+            except:
+                return Response(status=status.HTTP_417_EXPECTATION_FAILED)
 
