@@ -21,9 +21,15 @@ class Player(models.Model):
 class Organizer(models.Model):
     username = models.CharField(primary_key=True, max_length=30)
     password = models.CharField(max_length=30)
+    description = models.CharField(max_length=200, default="")
 
     def __str__(self):
         return "{}, {}".format(self.username, self.password)
+
+
+class Administrator(models.Model):
+    username = models.CharField(primary_key=True, max_length=30)
+    password = models.CharField(max_length=30)
 
 
 class OrganizerProfile(object):
@@ -34,11 +40,6 @@ class OrganizerProfile(object):
         self.tourneyTitle = tourneyTitle
         self.actualComment = actualComment
         self.commentAuthor = commentAuthor
-
-
-class Administrator(models.Model):
-    username = models.CharField(primary_key=True, max_length=30)
-    password = models.CharField(max_length=30)
         
 
 class Tournament(models.Model):

@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from tourneyBrag.models import *
 from tourneyBrag.serializers import *
+from itertools import chain
 import json
 
 
@@ -191,16 +192,21 @@ class MakeComment(APIView):
             return HttpResponse("Error creating comment", status = 405)
 
 
-class PlayersList(APIView):
+class UsersList(APIView):
     def post(self, request, *args, **kwargs):
         terms = json.loads(request.body)
         u, d = terms["username"], terms["description"]
-        if u == "": players = Player.objects.all().values(
-                "username", "description")
-        else: players = Player.objects.filter(username = u).values(
-                "username", "description")
-        if d != "": players = players.filter(description = d)
-        return JsonResponse({"players": [entry for entry in players]})
+        if u == "":
+            players = Player.objects.all().values("username", "description")
+            organizers = Organizer.objects.all().values("username", "description")
+        else:
+            players = Player.objects.filter(username = u).values("username", "description")
+            organizers = Organizer.objects.filter(username = u).values("username", "description")
+        if d != "":
+            players = players.filter(description = d)
+            organizers = organizers.objects.filter(description = d)
+        users = chain(players, organizers)
+        return JsonResponse({"users": [entry for entry in users]})
 
 
 class TournamentsList(APIView):
