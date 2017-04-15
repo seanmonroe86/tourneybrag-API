@@ -51,8 +51,8 @@ class Voucher(models.Model):
 
 class Entrant(models.Model):
     name = models.CharField(max_length=30)
-    tournament_entered = models.ForeignKey('Tournament', on_delete=models.DO_NOTHING,related_name= '+')
-    has_been_accepted = models.BooleanField()
+    tournament_entered = models.CharField(max_length=30)
+    has_been_accepted = models.BooleanField(default = False)
 
 
 class Record(models.Model):

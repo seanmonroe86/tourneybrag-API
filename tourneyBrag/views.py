@@ -246,23 +246,18 @@ class TournamentsList(APIView):
 
 class ApplicationList(APIView):
     def get(self, request, *args, **kwargs):
-        organizerName = request.META['QUERY_STRING']
-        theOrganizer = Organizer.objects.get(username = organizerName)
-        allTournaments = Tournament.objects.filter(
-                organizerOwner = theOrganizer
+        organizer = request.META['QUERY_STRING']
+        t = Tournament.objects.filter(
+                organizerOwner = organizer
                 ).values('tournamentTitle')
-        allEntrants = Entrant.objects.filter(
-                tournament_entered__in = allTournaments,
+        tourneys = []
+        for tourney in t:
+            tourneys.append(tourney['tournamentTitle'])
+        e = Entrant.objects.filter(
+                tournament_entered__in = tourneys,
                 has_been_accepted = False
-                ).values('tournament_entered', 'name')
-
-        entrantsList = []
-
-        for entrant in allEntrants:
-            entrantsList.append({
-            'theTournament': entrant.tournament_entered,
-            'name': entrant.name})
-        return JsonResponse(entrantsList, status=status.HTTP_200_OK)
+                ).values('name', 'tournament_entered')
+        return JsonResponse({"entrants": [entry for entry in e]})
 
     def post(self, request, *args, **kwargs):
         specificTouney = request.data['tournament_entered']
@@ -270,16 +265,12 @@ class ApplicationList(APIView):
         newEntrant = Entrant(
                 name = player,
                 tournament_entered = specificTouney,
-                has_been_accepted = False
                 )
         try:
             newEntrant.save()
             return Response(status=status.HTTP_201_CREATED)
         except:
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def put(self, request, *args, **kwargs):
-        pass
 
 
 class MakeFan(APIView):
