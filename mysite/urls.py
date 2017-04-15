@@ -20,9 +20,10 @@ urlpatterns = [
     #url(r'^create-tournament', views.CreateTournament.as_view()),
     url(r'^create-match', views.MatchDetail.as_view()),
     #url(r'^modify-tournament', views.ModifyTournament.as_view()),
-    url(r'^list-players/', views.PlayerList.as_view()),
-    url(r'^list-organizers/', views.OrganizerList.as_view()),
-    url(r'^list-tournaments/', views.TournamentsList.as_view()),
+    #url(r'^list-players/', views.PlayerList.as_view()),
+    url(r'^list-players', views.PlayersList.as_view()),
+    url(r'^list-organizers', views.OrganizerList.as_view()),
+    url(r'^list-tournaments', views.TournamentsList.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

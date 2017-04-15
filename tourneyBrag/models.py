@@ -12,6 +12,7 @@ class Player(models.Model):
     loc = models.CharField(max_length=50)
     playerWins = models.IntegerField(default=0)
     playerGames = models.IntegerField(default=0)
+    description = models.CharField(max_length=200, default="")
 
     def __str__(self):
         return "{}, {}, {}, {}".format(self.username, self.password, self.gamePlayed, self.mainCharacter)
