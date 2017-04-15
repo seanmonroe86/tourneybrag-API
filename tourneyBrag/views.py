@@ -132,6 +132,23 @@ class OrganizerPage(APIView):
             return HttpResponse("Error creating organizer", status = 405)
 
 
+class AdminPage(APIView):
+    def get(self, request, *args, **kwargs):
+        adminID = request.META['QUERY_STRING']
+        try:
+            a = Administrator.objects.get(username = adminID)
+        except Administrator.DoesNotExist:
+            return HttpResponse("Administrator {} not found.".format(adminID), status = 404)
+        b = Banned.objects.filter(
+                admin = adminID
+                ).values('user', 'date', 'reason')
+        admin = {
+                'username': a.username,
+                'has_banned': [entry for entry in b]
+                }
+        return JsonResponse(admin)
+
+
 class TournamentPage(APIView):
     def get(self, request, *args, **kwargs):
         tourneyName = request.META['QUERY_STRING']

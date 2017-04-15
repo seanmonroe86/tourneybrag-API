@@ -4,7 +4,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from tourneyBrag import views
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    url(r'^admin', admin.site.urls),
+    url(r'^adminpage', views.AdminPage.as_view()),
     url(r'^playerpage', views.PlayerPage.as_view()),
     url(r'^tournamentpage', views.TournamentPage.as_view()),
     url(r'^organizerpage', views.OrganizerPage.as_view()),
