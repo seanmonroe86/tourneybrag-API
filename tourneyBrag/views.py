@@ -203,19 +203,6 @@ class PlayersList(APIView):
         return JsonResponse({"players": [entry for entry in players]})
 
 
-class OrganizerList(mixins.ListModelMixin,
-                                 mixins.CreateModelMixin,
-                                 generics.GenericAPIView):
-        queryset = Organizer.objects.all()
-        serializer_class = OrganizerSerializer
-
-        def get(self, request, *args, **kwargs):
-                return self.list(request, *args, **kwargs)
-
-        def post(self, request, *args, **kwargs):
-                return self.create(request, *args, **kwargs)
-
-
 class TournamentsList(APIView):
     def post(self, request, *args, **kwargs):
         terms = json.loads(request.body)
