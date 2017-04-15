@@ -70,7 +70,7 @@ class PlayerPage(APIView):
                 ).values('author_name', 'actual_comment')
         player = {
                 'username': p.username,
-                'accountType': p.accountType,
+                'acctType': p.acctType,
                 'gamePlays': [{'gameName': p.gamePlayed}],
                 'mainchar': p.mainCharacter,
                 'location': p.loc,
@@ -113,6 +113,7 @@ class OrganizerPage(APIView):
             tourneyList.append({'tournament_name': tourney.tournamentTitle})
         organizer = {
                 'username': o.username,
+                'acctType': o.acctType,
                 'vouchers': [entry for entry in v],
                 'tournaments': tourneyList,
                 'comments': [entry for entry in c],
@@ -144,6 +145,7 @@ class AdminPage(APIView):
                 ).values('user', 'date', 'reason')
         admin = {
                 'username': a.username,
+                'acctType': a.acctType,
                 'has_banned': [entry for entry in b]
                 }
         return JsonResponse(admin)
@@ -214,18 +216,22 @@ class UsersList(APIView):
         terms = json.loads(request.body)
         u, t, d = terms["username"], terms["type"], terms["description"]
         if u == "":
-            players = Player.objects.all().values("username", "description")
-            organizers = Organizer.objects.all().values("username", "description")
+            players = Player.objects.all().values(
+                    "username", "description", "acctType")
+            organizers = Organizer.objects.all().values(
+                    "username", "description", "acctType")
         else:
-            players = Player.objects.filter(username = u).values("username", "description")
-            organizers = Organizer.objects.filter(username = u).values("username", "description")
+            players = Player.objects.filter(username = u).values(
+                    "username", "description", "acctType")
+            organizers = Organizer.objects.filter(username = u).values(
+                    "username", "description", "acctType")
         if d != "":
             players = players.filter(description = d)
             organizers = organizers.objects.filter(description = d)
         if t == "": users = chain(players, organizers)
         elif t == "player": users = players
         elif t == "organizer": users = organizers
-        else: users = [{"username": "NULL", "description": "NULL"}]
+        else: users = [{"username": "NULL", "description": "NULL", "type": "NULL"}]
         return JsonResponse({"users": [entry for entry in users]})
 
 

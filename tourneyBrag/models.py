@@ -8,7 +8,7 @@ class Player(models.Model):
     password = models.CharField(max_length=30)
     gamePlayed = models.CharField(max_length=50)
     mainCharacter = models.CharField(max_length=30)
-    accountType = models.CharField(max_length=10, default="player")
+    acctType = models.CharField(max_length=10, default="player")
     loc = models.CharField(max_length=50)
     playerWins = models.IntegerField(default=0)
     playerGames = models.IntegerField(default=0)
@@ -22,6 +22,7 @@ class Organizer(models.Model):
     username = models.CharField(primary_key=True, max_length=30)
     password = models.CharField(max_length=30)
     description = models.CharField(max_length=200, default="")
+    acctType = models.CharField(max_length=10, default="organizer")
 
     def __str__(self):
         return "{}, {}".format(self.username, self.password)
@@ -29,6 +30,7 @@ class Organizer(models.Model):
 
 class Administrator(models.Model):
     username = models.CharField(primary_key=True, max_length=30)
+    acctType = models.CharField(max_length=10, default="admin")
     password = models.CharField(max_length=30)
 
 
