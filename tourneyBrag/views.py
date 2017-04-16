@@ -320,7 +320,8 @@ class ApplicationList(APIView):
         return JsonResponse({"entrants": [entry for entry in e]})
 
     def post(self, request, *args, **kwargs):
-        denied = request.data['denied']
+        req = json.loads(request.body)
+        denied = req['denied']
         e = Entrant.objects.get(
                 name = request.data['name'],
                 tournament_entered = request.data['tournament_entered']
