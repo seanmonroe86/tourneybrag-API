@@ -18,6 +18,12 @@ class Player(models.Model):
         return "{}, {}, {}, {}".format(self.username, self.password, self.gamePlayed, self.mainCharacter)
 
 
+class GamePlayed(models.Model):
+    player = models.CharField(max_length=30)
+    game = models.CharField(max_length=30)
+    character = models.CharField(max_length=30)
+
+
 class Organizer(models.Model):
     username = models.CharField(primary_key=True, max_length=30)
     password = models.CharField(max_length=30)
@@ -39,6 +45,7 @@ class Tournament(models.Model):
     tournamentTitle = models.CharField(max_length = 30, unique = True, primary_key = True)
     date_created = models.DateField('date_created', auto_now_add = True)
     date_start = models.DateField('date_start', default = '1986-09-28')
+    has_started = models.BooleanField(default = False)
 
 
 class Fan(models.Model):
