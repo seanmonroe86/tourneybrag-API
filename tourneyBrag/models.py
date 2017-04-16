@@ -45,7 +45,7 @@ class Tournament(models.Model):
     tournamentTitle = models.CharField(max_length = 30, unique = True, primary_key = True)
     date_created = models.DateField('date_created', auto_now_add = True)
     date_start = models.DateField('date_start', default = '1986-09-28')
-    status = models.CharField(max_length = 30, default = "pending")
+    status = models.CharField(max_length = 30, default = "pending") #pending/started/finished
 
 
 class Fan(models.Model):

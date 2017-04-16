@@ -68,11 +68,13 @@ class PlayerPage(APIView):
         c = Comment.objects.filter(
                 receiver_name = playerID
                 ).values('author_name', 'actual_comment')
+        g = GamePlayed.objects.filter(
+                player = playerID
+                ).values('game', 'character')
         player = {
                 'username': p.username,
                 'acctType': p.acctType,
-                'gamePlays': [{'gameName': p.gamePlayed}],
-                'mainchar': p.mainCharacter,
+                'gamePlays': [entry for entry in g],
                 'description': p.description,
                 'location': p.loc,
                 'wins': p.playerWins,
@@ -88,7 +90,6 @@ class PlayerPage(APIView):
 
         try:
             thePlayer = Player.objects.get(username = p['username'])
-            thePlayer.gamePlayed = p['gamePlays']
             thePlayer.mainCharacter = p['mainchar']
             thePlayer.loc = p['location']
             thePlayer.description = p['description']
@@ -98,7 +99,6 @@ class PlayerPage(APIView):
             player = Player(
                     username = p['username'],
                     password = p['password'],
-                    gamePlayed = p['gamePlays'],
                     mainCharacter = p['mainchar'],
                     loc = p['location'],
                     description=p['description']
@@ -173,7 +173,10 @@ class AdminPage(APIView):
 class TournamentPage(APIView):
     def get(self, request, *args, **kwargs):
         tourneyName = request.META['QUERY_STRING']
-        t = Tournament.objects.get(tournamentTitle = tourneyName)
+        try:
+            t = Tournament.objects.get(tournamentTitle = tourneyName)
+        except Tournament.DoesNotExist:
+            return JsonResponse({'name': 'DNE'})
         c = Comment.objects.filter(receiver_name = tourneyName).values('author_name', 'actual_comment')
         e = Entrant.objects.filter(
                 tournament_entered = t,
@@ -226,13 +229,20 @@ class TournamentPage(APIView):
 class AddGame(APIView):
     def post(self, request, *args, **kwargs):
         g = json.loads(request.body)
-        game = GamePlayed(
-                player = g['player'],
-                game = g['game'],
-                character = g['character']
-                )
         try:
-            comment.save()
+            game = GamePlayed.objects.get(
+                    player = g['player'],
+                    game = g['game'],
+                    character = g['character'])
+            return HttpResponse("Duplicate entry", status = 409)
+        except GamePlayed.DoesNotExist:
+            game = GamePlayed(
+                    player = g['player'],
+                    game = g['game'],
+                    character = g['character']
+                    )
+        try:
+            game.save()
             return HttpResponse("Game added", status = 201)
         except:
             return HttpResponse("Error adding game", status = 405)
@@ -280,15 +290,16 @@ class UsersList(APIView):
 class TournamentsList(APIView):
     def post(self, request, *args, **kwargs):   #is this supposed to be get?
         terms = json.loads(request.body)
-        n, o, d = terms["name"], terms["organizer"], terms["date"]
+        n, o, d, s = terms["name"], terms["organizer"], terms["date"], terms["status"]
         if n == "": tourneys = Tournament.objects.all().values(
-                "tournamentTitle", "organizerOwner", "date_start", "status"
+                "tournamentTitle", "organizerOwner", "date_start"
                 )
         else: tourneys = Tournament.objects.filter(tournamentTitle = n).values(
-                "tournamentTitle", "organizerOwner", "date_start", "status"
+                "tournamentTitle", "organizerOwner", "date_start"
                 )
         if o != "": tourneys = tourneys.filter(organizerOwner = o)
         if d != "": tourneys = tourneys.filter(date_start = d)
+        if s != "": tourneys = tourneys.filter(status = s)
         return JsonResponse({"tournaments": [entry for entry in tourneys]})
 
 
