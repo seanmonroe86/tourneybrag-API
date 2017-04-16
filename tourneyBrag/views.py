@@ -86,18 +86,15 @@ class PlayerPage(APIView):
     def post(self, request, *args, **kwargs):
         p = json.loads(request.body)
 
-        thePlayer = Player.objects.get(username = p.username)
-
-        if thePlayer:
-            thePlayer.username = p['username']
-            thePlayer.password = p['password']
+        try:
+            thePlayer = Player.objects.get(username = p['username'])
             thePlayer.gamePlayed = p['gamePlays']
             thePlayer.mainCharacter = p['mainchar']
             thePlayer.loc = p['location']
             thePlayer.description = p['description']
             thePlayer.save()
             return HttpResponse("Player Updated", status = 202)
-        else:
+        except Player.DoesNotExist:
             player = Player(
                     username = p['username'],
                     password = p['password'],
@@ -133,15 +130,21 @@ class OrganizerPage(APIView):
                 'vouchers': [entry for entry in v],
                 'tournaments': tourneyList,
                 'comments': [entry for entry in c],
+                'description': o.description,
                 }
         return JsonResponse(organizer)
 
     def post(self, request, *args, **kwargs):
         o = json.loads(request.body)
-        organizer = Organizer(
-                username = o['username'],
-                password = o['password'],
-                )
+        try:
+            organizer = Organizer.objects.get(username = o['username'])
+            organizer.description = o['description']
+        except:
+            organizer = Organizer(
+                    username = o['username'],
+                    password = o['password'],
+                    description = o['description'],
+                    )
         try:
             organizer.save()
             return HttpResponse("Organizer created", status = 201)
@@ -368,29 +371,28 @@ class MatchDetail(APIView): #Post = entering new match, PUT is updating
         plyrB = request.data['playerB']
         theWinner = ""   #If update is implemented, then check for winner string
 
-        theMatch = Match.objects.get(
-            tournamentTitle=tourneyTitle,
-            playerA=plyrA,
-            playerB=plyrB
-        )
-
-        if theMatch:
+        try:
+            theMatch = Match.objects.get(
+                tournamentTitle=tourneyTitle,
+                playerA=plyrA,
+                playerB=plyrB
+            )
             #theMatch.winner = theWinner
             #try:
             #    theMatch.save(update_fields = ['winner'], force_update = True)
             #    return Response(status = status.HTTP_202_ACCEPTED)
             #except:
-                return Response(status=status.HTTP_409_CONFLICT)
-        else:
+            return Response(status=status.HTTP_409_CONFLICT)
+        except Match.DoesNotExist:
             newMatch = Match(
                     tournamentTitle = tourneyTitle,
                     playerA = plyrA,
                     playerB = plyrB,
                     winner = theWinner
                     )
-            try:
-                newMatch.save()
-                return Response(status=status.HTTP_201_CREATED)
-            except:
-                return Response(status=status.HTTP_417_EXPECTATION_FAILED)
+        try:
+            newMatch.save()
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_417_EXPECTATION_FAILED)
 
