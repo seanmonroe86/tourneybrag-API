@@ -73,6 +73,7 @@ class PlayerPage(APIView):
                 'accountType': p.accountType,
                 'gamePlays': [{'gameName': p.gamePlayed}],
                 'mainchar': p.mainCharacter,
+                'description': p.description,
                 'location': p.loc,
                 'wins': p.playerWins,
                 'losses': (p.playerGames - p.playerWins),
