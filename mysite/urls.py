@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^create-match', views.MatchDetail.as_view()),
     url(r'^list-users', views.UsersList.as_view()),
     url(r'^list-tournaments', views.TournamentsList.as_view()),
+    url(r'^game', views.AddGame.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

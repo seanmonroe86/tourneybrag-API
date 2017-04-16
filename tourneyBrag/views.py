@@ -204,6 +204,7 @@ class TournamentPage(APIView):
                 'denied': [entry for entry in d],
                 'matches': matchList,
                 'comments': [entry for entry in c],
+                'status': t.status,
                 }
         return JsonResponse(tourney)
 
@@ -212,13 +213,29 @@ class TournamentPage(APIView):
         tourney = Tournament(
                 organizerOwner = t['organizer'],
                 tournamentTitle = t['name'],
-                date_start = t['date']
+                date_start = t['date'],
+                status = t['status']
                 )
         try:
             tourney.save()
             return HttpResponse("Tournament created", status = 201)
         except:
             return HttpResponse("Error creating tournament", status = 405)
+
+
+class AddGame(APIView):
+    def post(self, request, *args, **kwargs):
+        g = json.loads(request.body)
+        game = GamePlayed(
+                player = g['player'],
+                game = g['game'],
+                character = g['character']
+                )
+        try:
+            comment.save()
+            return HttpResponse("Game added", status = 201)
+        except:
+            return HttpResponse("Error adding game", status = 405)
 
 
 class MakeComment(APIView):
@@ -265,10 +282,10 @@ class TournamentsList(APIView):
         terms = json.loads(request.body)
         n, o, d = terms["name"], terms["organizer"], terms["date"]
         if n == "": tourneys = Tournament.objects.all().values(
-                "tournamentTitle", "organizerOwner", "date_start"
+                "tournamentTitle", "organizerOwner", "date_start", "status"
                 )
         else: tourneys = Tournament.objects.filter(tournamentTitle = n).values(
-                "tournamentTitle", "organizerOwner", "date_start"
+                "tournamentTitle", "organizerOwner", "date_start", "status"
                 )
         if o != "": tourneys = tourneys.filter(organizerOwner = o)
         if d != "": tourneys = tourneys.filter(date_start = d)
