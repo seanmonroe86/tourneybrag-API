@@ -68,11 +68,13 @@ class PlayerPage(APIView):
         c = Comment.objects.filter(
                 receiver_name = playerID
                 ).values('author_name', 'actual_comment')
+        g = GamePlayed.objects.filter(
+                player = playerID
+                ).values('game', 'character')
         player = {
                 'username': p.username,
-                'accountType': p.accountType,
-                'gamePlays': [{'gameName': p.gamePlayed}],
-                'mainchar': p.mainCharacter,
+                'acctType': p.acctType,
+                'gamePlays': [entry for entry in g],
                 'description': p.description,
                 'location': p.loc,
                 'wins': p.playerWins,
@@ -86,23 +88,17 @@ class PlayerPage(APIView):
     def post(self, request, *args, **kwargs):
         p = json.loads(request.body)
 
-        thePlayer = Player.objects.get(username = p.username)
-
-        if thePlayer:
-            thePlayer.username = p['username']
-            thePlayer.password = p['password']
-            thePlayer.gamePlayed = p['gamePlays']
+        try:
+            thePlayer = Player.objects.get(username = p['username'])
             thePlayer.mainCharacter = p['mainchar']
             thePlayer.loc = p['location']
             thePlayer.description = p['description']
             thePlayer.save()
             return HttpResponse("Player Updated", status = 202)
-        else:
+        except Player.DoesNotExist:
             player = Player(
                     username = p['username'],
                     password = p['password'],
-                    gamePlayed = p['gamePlays'],
-                    mainCharacter = p['mainchar'],
                     loc = p['location'],
                     description=p['description']
                     )
@@ -117,7 +113,10 @@ class OrganizerPage(APIView):
     def get(self, request, *args, **kwargs):
         organizerID = request.META['QUERY_STRING']
         tourneyList = []
-        o = Organizer.objects.get(username = organizerID)
+        try:
+            o = Organizer.objects.get(username = organizerID)
+        except Organizer.DoesNotExist:
+            return JsonResponse({'name': 'DNE'})
         v = Voucher.objects.filter(
                 user_receiver = organizerID
                 ).values('user_voucher')
@@ -129,18 +128,25 @@ class OrganizerPage(APIView):
             tourneyList.append({'tournament_name': tourney.tournamentTitle})
         organizer = {
                 'username': o.username,
+                'acctType': o.acctType,
                 'vouchers': [entry for entry in v],
                 'tournaments': tourneyList,
                 'comments': [entry for entry in c],
+                'description': o.description,
                 }
         return JsonResponse(organizer)
 
     def post(self, request, *args, **kwargs):
         o = json.loads(request.body)
-        organizer = Organizer(
-                username = o['username'],
-                password = o['password'],
-                )
+        try:
+            organizer = Organizer.objects.get(username = o['username'])
+            organizer.description = o['description']
+        except:
+            organizer = Organizer(
+                    username = o['username'],
+                    password = o['password'],
+                    description = o['description'],
+                    )
         try:
             organizer.save()
             return HttpResponse("Organizer created", status = 201)
@@ -148,10 +154,31 @@ class OrganizerPage(APIView):
             return HttpResponse("Error creating organizer", status = 405)
 
 
+class AdminPage(APIView):
+    def get(self, request, *args, **kwargs):
+        adminID = request.META['QUERY_STRING']
+        try:
+            a = Administrator.objects.get(username = adminID)
+        except Administrator.DoesNotExist:
+            return HttpResponse("Administrator {} not found.".format(adminID), status = 404)
+        b = Banned.objects.filter(
+                admin = adminID
+                ).values('user', 'date', 'reason')
+        admin = {
+                'username': a.username,
+                'acctType': a.acctType,
+                'has_banned': [entry for entry in b]
+                }
+        return JsonResponse(admin)
+
+
 class TournamentPage(APIView):
     def get(self, request, *args, **kwargs):
         tourneyName = request.META['QUERY_STRING']
-        t = Tournament.objects.get(tournamentTitle = tourneyName)
+        try:
+            t = Tournament.objects.get(tournamentTitle = tourneyName)
+        except Tournament.DoesNotExist:
+            return JsonResponse({'name': 'DNE'})
         c = Comment.objects.filter(receiver_name = tourneyName).values('author_name', 'actual_comment')
         e = Entrant.objects.filter(
                 tournament_entered = t,
@@ -159,8 +186,13 @@ class TournamentPage(APIView):
                 ).values('name')
         a = Entrant.objects.filter(
                 tournament_entered = tourneyName,
-                has_been_accepted = False
+                has_been_accepted = False,
+                has_been_denied = False
                 ).values('name')  #players who applied but not been accepted
+        d = Entrant.objects.filter(
+                tournament_entered = tourneyName,
+                has_been_denied = True
+                ).values('name')  #players who applied and denied
         m = Match.objects.filter(tournamentTitle=tourneyName)
 
         matchList = []
@@ -174,8 +206,10 @@ class TournamentPage(APIView):
                 'date': t.date_start,
                 'participants': [entry for entry in e],
                 'applicants': [applicant for applicant in a],
+                'denied': [entry for entry in d],
                 'matches': matchList,
                 'comments': [entry for entry in c],
+                'status': t.status,
                 }
         return JsonResponse(tourney)
 
@@ -184,13 +218,36 @@ class TournamentPage(APIView):
         tourney = Tournament(
                 organizerOwner = t['organizer'],
                 tournamentTitle = t['name'],
-                date_start = t['date']
+                date_start = t['date'],
+                status = t['status']
                 )
         try:
             tourney.save()
             return HttpResponse("Tournament created", status = 201)
         except:
             return HttpResponse("Error creating tournament", status = 405)
+
+
+class AddGame(APIView):
+    def post(self, request, *args, **kwargs):
+        g = json.loads(request.body)
+        try:
+            game = GamePlayed.objects.get(
+                    player = g['player'],
+                    game = g['game'],
+                    character = g['character'])
+            return HttpResponse("Duplicate entry", status = 409)
+        except GamePlayed.DoesNotExist:
+            game = GamePlayed(
+                    player = g['player'],
+                    game = g['game'],
+                    character = g['character']
+                    )
+        try:
+            game.save()
+            return HttpResponse("Game added", status = 201)
+        except:
+            return HttpResponse("Error adding game", status = 405)
 
 
 class MakeComment(APIView):
@@ -211,24 +268,31 @@ class MakeComment(APIView):
 class UsersList(APIView):
     def post(self, request, *args, **kwargs):
         terms = json.loads(request.body)
-        u, d = terms["username"], terms["description"]
+        u, t, d = terms["username"], terms["acctType"], terms["description"]
         if u == "":
-            players = Player.objects.all().values("username", "description")
-            organizers = Organizer.objects.all().values("username", "description")
+            players = Player.objects.all().values(
+                    "username", "description", "acctType")
+            organizers = Organizer.objects.all().values(
+                    "username", "description", "acctType")
         else:
-            players = Player.objects.filter(username = u).values("username", "description")
-            organizers = Organizer.objects.filter(username = u).values("username", "description")
+            players = Player.objects.filter(username = u).values(
+                    "username", "description", "acctType")
+            organizers = Organizer.objects.filter(username = u).values(
+                    "username", "description", "acctType")
         if d != "":
             players = players.filter(description = d)
             organizers = organizers.objects.filter(description = d)
-        users = chain(players, organizers)
+        if t == "": users = chain(players, organizers)
+        elif t == "player": users = players
+        elif t == "organizer": users = organizers
+        else: users = [{"username": "NULL", "description": "NULL", "type": "NULL"}]
         return JsonResponse({"users": [entry for entry in users]})
 
 
 class TournamentsList(APIView):
     def post(self, request, *args, **kwargs):   #is this supposed to be get?
         terms = json.loads(request.body)
-        n, o, d = terms["name"], terms["organizer"], terms["date"]
+        n, o, d, s = terms["name"], terms["organizer"], terms["date"], terms["status"]
         if n == "": tourneys = Tournament.objects.all().values(
                 "tournamentTitle", "organizerOwner", "date_start"
                 )
@@ -237,36 +301,53 @@ class TournamentsList(APIView):
                 )
         if o != "": tourneys = tourneys.filter(organizerOwner = o)
         if d != "": tourneys = tourneys.filter(date_start = d)
+        if s != "": tourneys = tourneys.filter(status = s)
         return JsonResponse({"tournaments": [entry for entry in tourneys]})
 
 
 class ApplicationList(APIView):
     def get(self, request, *args, **kwargs):
-        organizerName = request.META['QUERY_STRING']
-        theOrganizer = Organizer.objects.get(username = organizerName)
-        allTournaments = Tournament.objects.filter(
-                organizerOwner = theOrganizer
+        organizer = request.META['QUERY_STRING']
+        t = Tournament.objects.filter(
+                organizerOwner = organizer
                 ).values('tournamentTitle')
-        allEntrants = Entrant.objects.filter(
-                tournament_entered__in = allTournaments,
-                has_been_accepted = False
-                ).values('tournament_entered', 'name')
-
-        entrantsList = []
-
-        for entrant in allEntrants:
-            entrantsList.append({
-            'theTournament': entrant.tournament_entered,
-            'name': entrant.name})
-        return JsonResponse(entrantsList, status=status.HTTP_200_OK)
+        tourneys = []
+        for tourney in t:
+            tourneys.append(tourney['tournamentTitle'])
+        e = Entrant.objects.filter(
+                tournament_entered__in = tourneys,
+                has_been_accepted = False,
+                has_been_denied = False
+                ).values('name', 'tournament_entered')
+        return JsonResponse({"entrants": [entry for entry in e]})
 
     def post(self, request, *args, **kwargs):
-        specificTouney = request.data['tournament_entered']
-        player = request.data['name']
+        req = json.loads(request.body)
+        denied = req['denied']
+        try:
+            e = Entrant.objects.get(
+                    name = req['name'],
+                    tournament_entered = req['tournament_entered']
+                    )
+        except Entrant.DoesNotExist:
+            return HttpResponse("Applicant {} not found".format(req['name']))
+        if not denied: e.has_been_accepted = True
+        else: e.has_been_denied = True
+        try:
+            e.save()
+        except:
+            return HttpResponse("Error saving applicant", status = 405)
+        return HttpResponse("Applicant processed", status = 200)
+
+
+class ApplicationSign(APIView):
+    def post(self, request, *args, **kwargs):
+        app = json.loads(request.body)
+        specificTouney = app['tournament_entered']
+        player = app['name']
         newEntrant = Entrant(
                 name = player,
                 tournament_entered = specificTouney,
-                has_been_accepted = False
                 )
         try:
             newEntrant.save()
@@ -274,14 +355,12 @@ class ApplicationList(APIView):
         except:
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def put(self, request, *args, **kwargs):
-        pass
 
-
-class FanList(APIView):
+class MakeFan(APIView):
     def post(self, request, *args, **kwargs):
-        newFan = request.data['user_Fan']
-        theIdol = request.data['user_Idol']
+        fan = json.loads(request.body)
+        newFan = fan['user_Fan']
+        theIdol = fan['user_Idol']
         newFanObj = Fan(user_Fan = newFan, user_Idol = theIdol)
         try:
             newFanObj.save()
@@ -290,10 +369,11 @@ class FanList(APIView):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class VoucherList(APIView):
+class MakeVoucher(APIView):
     def post(self, request, *args, **kwargs):
-        newVoucher = request.data['user_voucher']
-        theReceiver = request.data['user_receiver']
+        vouch = json.loads(request.body)
+        newVoucher = vouch['user_voucher']
+        theReceiver = vouch['user_receiver']
         newVoucherObj = Voucher(
                 user_voucher = newVoucher,
                 user_receiver = theReceiver
@@ -305,16 +385,17 @@ class VoucherList(APIView):
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class BanHimList(APIView):
+class BanThem(APIView):
     def post(self, request, *args, **kwargs):
-        actingAdmin = request.data['admin']
-        userThatIsBanned = request.data['bannedUser']
-        timeBanned = request.data['bannedUntil']
-        reasonForBan = request.data['reason']
+        hammer = json.loads(request.body)
+        actingAdmin = hammer['admin']
+        userThatIsBanned = hammer['bannedUser']
+        timeBanned = hammer['bannedUntil']
+        reasonForBan = hammer['reason']
         newBannedUser = Banned(
                 admin = actingAdmin,
-                bannedUser = userThatIsBanned,
-                bannedUntil = timeBanned,
+                user = userThatIsBanned,
+                date = timeBanned,
                 reason = reasonForBan
                 )
         try:
@@ -326,34 +407,34 @@ class BanHimList(APIView):
 
 class MatchDetail(APIView): #Post = entering new match, PUT is updating
     def post(self, request, *args, **kwargs):
-        tourneyTitle = request.data['tournamentTitle']
-        plyrA = request.data['playerA']
-        plyrB = request.data['playerB']
+        match = json.loads(request.body)
+        tourneyTitle = match['tournamentTitle']
+        plyrA = match['playerA']
+        plyrB = match['playerB']
         theWinner = ""   #If update is implemented, then check for winner string
 
-        theMatch = Match.objects.get(
-            tournamentTitle=tourneyTitle,
-            playerA=plyrA,
-            playerB=plyrB
-        )
-
-        if theMatch:
+        try:
+            theMatch = Match.objects.get(
+                tournamentTitle=tourneyTitle,
+                playerA=plyrA,
+                playerB=plyrB
+            )
             #theMatch.winner = theWinner
             #try:
             #    theMatch.save(update_fields = ['winner'], force_update = True)
             #    return Response(status = status.HTTP_202_ACCEPTED)
             #except:
-                return Response(status=status.HTTP_409_CONFLICT)
-        else:
+            return Response(status=status.HTTP_409_CONFLICT)
+        except Match.DoesNotExist:
             newMatch = Match(
                     tournamentTitle = tourneyTitle,
                     playerA = plyrA,
                     playerB = plyrB,
                     winner = theWinner
                     )
-            try:
-                newMatch.save()
-                return Response(status=status.HTTP_201_CREATED)
-            except:
-                return Response(status=status.HTTP_417_EXPECTATION_FAILED)
+        try:
+            newMatch.save()
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_417_EXPECTATION_FAILED)
 

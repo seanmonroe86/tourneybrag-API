@@ -8,7 +8,7 @@ class Player(models.Model):
     password = models.CharField(max_length=30)
     gamePlayed = models.CharField(max_length=50)
     mainCharacter = models.CharField(max_length=30)
-    accountType = models.CharField(max_length=10, default="player")
+    acctType = models.CharField(max_length=10, default="player")
     loc = models.CharField(max_length=50)
     playerWins = models.IntegerField(default=0)
     playerGames = models.IntegerField(default=0)
@@ -18,10 +18,17 @@ class Player(models.Model):
         return "{}, {}, {}, {}".format(self.username, self.password, self.gamePlayed, self.mainCharacter)
 
 
+class GamePlayed(models.Model):
+    player = models.CharField(max_length=30)
+    game = models.CharField(max_length=30)
+    character = models.CharField(max_length=30)
+
+
 class Organizer(models.Model):
     username = models.CharField(primary_key=True, max_length=30)
     password = models.CharField(max_length=30)
     description = models.CharField(max_length=200, default="")
+    acctType = models.CharField(max_length=10, default="organizer")
 
     def __str__(self):
         return "{}, {}".format(self.username, self.password)
@@ -29,24 +36,16 @@ class Organizer(models.Model):
 
 class Administrator(models.Model):
     username = models.CharField(primary_key=True, max_length=30)
+    acctType = models.CharField(max_length=10, default="admin")
     password = models.CharField(max_length=30)
 
-
-class OrganizerProfile(object):
-    def __init__(self, organID, organName, pw, tourneyTitle, actualComment, commentAuthor):
-        self.organID = organID
-        self.organName - organName
-        self.pw = pw
-        self.tourneyTitle = tourneyTitle
-        self.actualComment = actualComment
-        self.commentAuthor = commentAuthor
-        
 
 class Tournament(models.Model):
     organizerOwner = models.CharField(max_length = 30)
     tournamentTitle = models.CharField(max_length = 30, unique = True, primary_key = True)
     date_created = models.DateField('date_created', auto_now_add = True)
     date_start = models.DateField('date_start', default = '1986-09-28')
+    status = models.CharField(max_length = 30, default = "pending") #pending/started/finished
 
 
 class Fan(models.Model):
@@ -61,8 +60,9 @@ class Voucher(models.Model):
 
 class Entrant(models.Model):
     name = models.CharField(max_length=30)
-    tournament_entered = models.ForeignKey('Tournament', on_delete=models.DO_NOTHING,related_name= '+')
-    has_been_accepted = models.BooleanField()
+    tournament_entered = models.CharField(max_length=30)
+    has_been_accepted = models.BooleanField(default = False)
+    has_been_denied= models.BooleanField(default = False)
 
 
 class Record(models.Model):
