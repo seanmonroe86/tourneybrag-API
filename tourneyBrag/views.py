@@ -99,7 +99,6 @@ class PlayerPage(APIView):
             player = Player(
                     username = p['username'],
                     password = p['password'],
-                    mainCharacter = p['mainchar'],
                     loc = p['location'],
                     description=p['description']
                     )
@@ -334,8 +333,9 @@ class ApplicationList(APIView):
 
 class ApplicationSign(APIView):
     def post(self, request, *args, **kwargs):
-        specificTouney = request.data['tournament_entered']
-        player = request.data['name']
+        app = json.loads(request.body)
+        specificTouney = app['tournament_entered']
+        player = app['name']
         newEntrant = Entrant(
                 name = player,
                 tournament_entered = specificTouney,
@@ -349,8 +349,9 @@ class ApplicationSign(APIView):
 
 class MakeFan(APIView):
     def post(self, request, *args, **kwargs):
-        newFan = request.data['user_Fan']
-        theIdol = request.data['user_Idol']
+        fan = json.loads(request.body)
+        newFan = fan['user_Fan']
+        theIdol = fan['user_Idol']
         newFanObj = Fan(user_Fan = newFan, user_Idol = theIdol)
         try:
             newFanObj.save()
@@ -361,8 +362,9 @@ class MakeFan(APIView):
 
 class MakeVoucher(APIView):
     def post(self, request, *args, **kwargs):
-        newVoucher = request.data['user_voucher']
-        theReceiver = request.data['user_receiver']
+        vouch = json.loads(request.body)
+        newVoucher = vouch['user_voucher']
+        theReceiver = vouch['user_receiver']
         newVoucherObj = Voucher(
                 user_voucher = newVoucher,
                 user_receiver = theReceiver
@@ -376,10 +378,11 @@ class MakeVoucher(APIView):
 
 class BanThem(APIView):
     def post(self, request, *args, **kwargs):
-        actingAdmin = request.data['admin']
-        userThatIsBanned = request.data['bannedUser']
-        timeBanned = request.data['bannedUntil']
-        reasonForBan = request.data['reason']
+        hammer = json.loads(request.body)
+        actingAdmin = hammer['admin']
+        userThatIsBanned = hammer['bannedUser']
+        timeBanned = hammer['bannedUntil']
+        reasonForBan = hammer['reason']
         newBannedUser = Banned(
                 admin = actingAdmin,
                 user = userThatIsBanned,
@@ -395,9 +398,10 @@ class BanThem(APIView):
 
 class MatchDetail(APIView): #Post = entering new match, PUT is updating
     def post(self, request, *args, **kwargs):
-        tourneyTitle = request.data['tournamentTitle']
-        plyrA = request.data['playerA']
-        plyrB = request.data['playerB']
+        match = json.loads(request.body)
+        tourneyTitle = match['tournamentTitle']
+        plyrA = match['playerA']
+        plyrB = match['playerB']
         theWinner = ""   #If update is implemented, then check for winner string
 
         try:
