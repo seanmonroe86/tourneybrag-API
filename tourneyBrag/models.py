@@ -62,7 +62,7 @@ class Entrant(models.Model):
     name = models.CharField(max_length=30)
     tournament_entered = models.CharField(max_length=30)
     has_been_accepted = models.BooleanField(default = False)
-    has_been_denied= models.BooleanField(default = False)
+    has_been_denied = models.BooleanField(default = False)
 
 
 class Record(models.Model):

@@ -22,7 +22,7 @@ class Login(APIView):
                         b = Banned.objects.get(user = userID)
                         ban = {'date': b.date, 'reason': b.reason}
                     except Banned.DoesNotExist:
-                        ban = {'date': '0000-00-00', 'reason': ''}
+                        ban = {'date': '0000-00-00', 'reason': u.acctType}
                     return JsonResponse(ban)
                 else:
                     r = {'date': '9999-99-99', 'reason': 'Invalid password'}
@@ -90,7 +90,6 @@ class PlayerPage(APIView):
 
         try:
             thePlayer = Player.objects.get(username = p['username'])
-            thePlayer.mainCharacter = p['mainchar']
             thePlayer.loc = p['location']
             thePlayer.description = p['description']
             thePlayer.save()
@@ -107,6 +106,8 @@ class PlayerPage(APIView):
                 return HttpResponse("Player created", status = 201)
             except:
                 return HttpResponse("Error creating player", status = 405)
+        except:
+            return HttpResponse("Error saving player to database", status = 405)
 
 
 class OrganizerPage(APIView):
@@ -181,9 +182,9 @@ class TournamentPage(APIView):
             return JsonResponse({'name': 'DNE'})
         c = Comment.objects.filter(receiver_name = tourneyName).values('author_name', 'actual_comment')
         e = Entrant.objects.filter(
-                tournament_entered = t,
+                tournament_entered = tourneyName,
                 has_been_accepted = True
-                ).values('name')
+                ).values('name')  #players who applied and have been accepted
         a = Entrant.objects.filter(
                 tournament_entered = tourneyName,
                 has_been_accepted = False,
@@ -330,7 +331,7 @@ class ApplicationList(APIView):
                     tournament_entered = req['tournament_entered']
                     )
         except Entrant.DoesNotExist:
-            return HttpResponse("Applicant {} not found".format(req['name']))
+            return HttpResponse("Applicant {} not found".format(req['name']), status = 404)
         if not denied: e.has_been_accepted = True
         else: e.has_been_denied = True
         try:
