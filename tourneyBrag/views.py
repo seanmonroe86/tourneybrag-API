@@ -333,7 +333,10 @@ class ApplicationList(APIView):
             return HttpResponse("Applicant {} not found".format(req['name']))
         if not denied: e.has_been_accepted = True
         else: e.has_been_denied = True
-        e.save()
+        try:
+            e.save()
+        except:
+            return HttpResponse("Error saving applicant", status = 405)
         return HttpResponse("Applicant processed", status = 200)
 
 
