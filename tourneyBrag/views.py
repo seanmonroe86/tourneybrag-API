@@ -113,7 +113,10 @@ class OrganizerPage(APIView):
     def get(self, request, *args, **kwargs):
         organizerID = request.META['QUERY_STRING']
         tourneyList = []
-        o = Organizer.objects.get(username = organizerID)
+        try:
+            o = Organizer.objects.get(username = organizerID)
+        except Organizer.DoesNotExist:
+            return JsonResponse({'name': 'DNE'})
         v = Voucher.objects.filter(
                 user_receiver = organizerID
                 ).values('user_voucher')
@@ -321,10 +324,13 @@ class ApplicationList(APIView):
     def post(self, request, *args, **kwargs):
         req = json.loads(request.body)
         denied = req['denied']
-        e = Entrant.objects.get(
-                name = request.data['name'],
-                tournament_entered = request.data['tournament_entered']
-                )
+        try:
+            e = Entrant.objects.get(
+                    name = req['name'],
+                    tournament_entered = req['tournament_entered']
+                    )
+        except Entrant.DoesNotExist:
+            return HttpResponse("Applicant {} not found".format(req['name']))
         if not denied: e.has_been_accepted = True
         else: e.has_been_denied = True
         e.save()
