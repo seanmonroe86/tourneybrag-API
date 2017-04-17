@@ -11,7 +11,7 @@ urlpatterns = [
     url(r'^login', views.Login.as_view()),
     url(r'^comment', views.MakeComment.as_view()),
     url(r'^register', views.Register.as_view()),
-    url(r'^become-voucher/', views.VoucherList.as_view()),
+    url(r'^voucher/', views.VoucherList.as_view()),
     url(r'^ban', views.BanHimList.as_view()),
     url(r'^become-fan', views.FanList.as_view()),
     url(r'^application', views.ApplicationList.as_view()),
