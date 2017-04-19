@@ -6,16 +6,15 @@ from django.db import models
 class Player(models.Model):
     username = models.CharField(max_length=30, primary_key=True)
     password = models.CharField(max_length=30)
-    gamePlayed = models.CharField(max_length=50)
-    mainCharacter = models.CharField(max_length=30)
     acctType = models.CharField(max_length=10, default="player")
     loc = models.CharField(max_length=50)
     playerWins = models.IntegerField(default=0)
     playerGames = models.IntegerField(default=0)
     description = models.CharField(max_length=200, default="")
+    banFlag = models.IntegerField(default=0)
 
     def __str__(self):
-        return "{}, {}, {}, {}".format(self.username, self.password, self.gamePlayed, self.mainCharacter)
+        return "{}, {}".format(self.username, self.password)
 
 
 class GamePlayed(models.Model):
@@ -27,8 +26,10 @@ class GamePlayed(models.Model):
 class Organizer(models.Model):
     username = models.CharField(primary_key=True, max_length=30)
     password = models.CharField(max_length=30)
+    loc = models.CharField(max_length=50, default="")
     description = models.CharField(max_length=200, default="")
     acctType = models.CharField(max_length=10, default="organizer")
+    banFlag = models.IntegerField(default=0)
 
     def __str__(self):
         return "{}, {}".format(self.username, self.password)
@@ -46,6 +47,7 @@ class Tournament(models.Model):
     date_created = models.DateField('date_created', auto_now_add = True)
     date_start = models.DateField('date_start', default = '1986-09-28')
     status = models.CharField(max_length = 30, default = "pending") #pending/started/finished
+    banFlag = models.IntegerField(default=0)
 
 
 class Fan(models.Model):
@@ -65,10 +67,19 @@ class Entrant(models.Model):
     has_been_denied = models.BooleanField(default = False)
 
 
+    def __str__(self):
+        return "{}, {}".format(self.name, self.tournament_entered)
+
+
 class Record(models.Model):
     tournament_name = models.ForeignKey('Tournament',on_delete=models.CASCADE,related_name= '+')
     player_winner = models.CharField(max_length=30)
     player_loser = models.CharField(max_length=30)
+
+
+class Reported(models.Model):
+    actor = models.CharField(max_length=30)
+    target = models.CharField(max_length=30)
 
 
 class Banned(models.Model):

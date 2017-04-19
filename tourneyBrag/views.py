@@ -60,6 +60,11 @@ class PlayerPage(APIView):
             p = Player.objects.get(username = playerID)
         except Player.DoesNotExist:
             return HttpResponse("Player {} not found.".format(playerID), status = 404)
+        try:
+            b = Banned.objects.get(user = playerID)
+            isBanned = True
+        except Banned.DoesNotExist:
+            isBanned = False
         e = Entrant.objects.filter(
                 name = playerID,
                 has_been_accepted = True
@@ -71,6 +76,10 @@ class PlayerPage(APIView):
         g = GamePlayed.objects.filter(
                 player = playerID
                 ).values('game', 'character')
+        r = Reported.objects.filter(target = playerID).values('actor')
+        reported = []
+        for tar in r:
+            reported.append(tar['actor'])
         player = {
                 'username': p.username,
                 'acctType': p.acctType,
@@ -82,6 +91,9 @@ class PlayerPage(APIView):
                 'tourneysPlayed': [entry for entry in e],
                 'fans': [entry for entry in f],
                 'comments': [entry for entry in c],
+                'banflags': p.banFlag,
+                'reported': reported,
+                'banned': isBanned,
                 }
         return JsonResponse(player)
 
@@ -95,12 +107,21 @@ class PlayerPage(APIView):
             thePlayer.save()
             return HttpResponse("Player Updated", status = 202)
         except Player.DoesNotExist:
-            player = Player(
-                    username = p['username'],
-                    password = p['password'],
-                    loc = p['location'],
-                    description=p['description']
-                    )
+            try:
+                if p['editing']: pass
+                player = Player(
+                        username = p['username'],
+                        loc = p['location'],
+                        description=p['description']
+                        )
+    
+            except KeyError:
+                player = Player(
+                        username = p['username'],
+                        password = p['password'],
+                        loc = p['location'],
+                        description=p['description']
+                        )
             try:
                 player.save()
                 return HttpResponse("Player created", status = 201)
@@ -118,6 +139,11 @@ class OrganizerPage(APIView):
             o = Organizer.objects.get(username = organizerID)
         except Organizer.DoesNotExist:
             return JsonResponse({'name': 'DNE'})
+        try:
+            b = Banned.objects.get(user = organizerID)
+            isBanned = True
+        except Banned.DoesNotExist:
+            isBanned = False
         v = Voucher.objects.filter(
                 user_receiver = organizerID
                 ).values('user_voucher')
@@ -125,15 +151,23 @@ class OrganizerPage(APIView):
         c = Comment.objects.filter(
                 receiver_name = organizerID
                 ).values('author_name', 'actual_comment')
+        r = Reported.objects.filter(target = organizerID).values('actor')
         for tourney in [entry for entry in t]:
             tourneyList.append({'tournament_name': tourney.tournamentTitle})
+        reported = []
+        for tar in r:
+            reported.append(tar['actor'])
         organizer = {
                 'username': o.username,
                 'acctType': o.acctType,
                 'vouchers': [entry for entry in v],
                 'tournaments': tourneyList,
+                'location': o.loc,
                 'comments': [entry for entry in c],
                 'description': o.description,
+                'banflags': o.banFlag,
+                'reported': reported,
+                'banned': isBanned,
                 }
         return JsonResponse(organizer)
 
@@ -141,11 +175,13 @@ class OrganizerPage(APIView):
         o = json.loads(request.body)
         try:
             organizer = Organizer.objects.get(username = o['username'])
+            organizer.loc = o['location'],
             organizer.description = o['description']
-        except:
+        except Organizer.DoesNotExist:
             organizer = Organizer(
                     username = o['username'],
                     password = o['password'],
+                    loc = o['location'],
                     description = o['description'],
                     )
         try:
@@ -180,6 +216,11 @@ class TournamentPage(APIView):
             t = Tournament.objects.get(tournamentTitle = tourneyName)
         except Tournament.DoesNotExist:
             return JsonResponse({'name': 'DNE'})
+        try:
+            b = Banned.objects.get(user = tourneyName)
+            isBanned = True
+        except Banned.DoesNotExist:
+            isBanned = False
         c = Comment.objects.filter(receiver_name = tourneyName).values('author_name', 'actual_comment')
         e = Entrant.objects.filter(
                 tournament_entered = tourneyName,
@@ -195,11 +236,13 @@ class TournamentPage(APIView):
                 has_been_denied = True
                 ).values('name')  #players who applied and denied
         m = Match.objects.filter(tournamentTitle=tourneyName)
-
+        r = Reported.objects.filter(target = tourneyName).values('actor')
         matchList = []
-
         for aMatch in m:
             matchList.append({"playerA": aMatch.playerA, "playerB": aMatch.playerB})
+        reported = []
+        for tar in r:
+            reported.append(tar['actor'])
 
         tourney = {
                 'name': t.tournamentTitle,
@@ -211,6 +254,9 @@ class TournamentPage(APIView):
                 'matches': matchList,
                 'comments': [entry for entry in c],
                 'status': t.status,
+                'banflags': t.banFlag,
+                'reported': reported,
+                'banned': isBanned,
                 }
         return JsonResponse(tourney)
 
@@ -381,6 +427,22 @@ class MakeVoucher(APIView):
                 )
         try:
             newVoucherObj.save()
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class ReportThem(APIView):
+    def post(self, request, *args, **kwargs):
+        report = json.loads(request.body)
+        reporter = hammer['actor']
+        reportee = hammer['target']
+        newReportedUser = Reported(
+                actor = reporter,
+                target = reportee,
+                )
+        try:
+            newReportedUser.save()
             return Response(status=status.HTTP_201_CREATED)
         except:
             return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
