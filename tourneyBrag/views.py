@@ -175,7 +175,7 @@ class OrganizerPage(APIView):
         o = json.loads(request.body)
         try:
             organizer = Organizer.objects.get(username = o['username'])
-            organizer.loc = o['location'],
+            organizer.loc = o['location']
             organizer.description = o['description']
         except Organizer.DoesNotExist:
             organizer = Organizer(

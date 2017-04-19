@@ -49,6 +49,9 @@ class Tournament(models.Model):
     status = models.CharField(max_length = 30, default = "pending") #pending/started/finished
     banFlag = models.IntegerField(default=0)
 
+    def __str__(self):
+        return "{}, {}".format(self.tournamentTitle, self.organizerOwner)
+
 
 class Fan(models.Model):
     user_Fan = models.CharField(max_length=30) #user_fan is a fan of user_idol
