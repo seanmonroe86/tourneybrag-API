@@ -88,6 +88,9 @@ class Banned(models.Model):
     date = models.DateField(default="1986-09-28")
     reason = models.CharField(max_length=50)
 
+    def __str__(self):
+        return "{}, {}".format(self.user, self.reason)
+
 
 class Match(models.Model):
     playerA = models.CharField(max_length=30)
