@@ -57,8 +57,11 @@ suffice; hashed passwords have not been implemented yet, so security is hardly
 a concern.
 
 Instructions used in developing backend:
+
 Django: https://docs.djangoproject.com/en/1.10/intro/tutorial01/
+
 Apache: https://wiki.archlinux.org/index.php/Apache_HTTP_Server
+
 PostgreSQL: https://wiki.archlinux.org/index.php/PostgreSQL
 
 
